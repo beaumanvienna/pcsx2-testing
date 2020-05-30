@@ -436,7 +436,12 @@ public:
 		// Note: GetUserLocalDataDir() on linux return $HOME/.pcsx2 unfortunately it does not follow the XDG standard
 		// So we re-implement it, to follow the standard.
 		wxDirName user_local_dir;
-		wxDirName default_config_dir = (wxDirName)Path::Combine( L".config", pxGetAppName() );
+        #warning "JC: modified"
+        #ifdef __x86_64__
+            wxDirName default_config_dir = (wxDirName)Path::Combine( L".marley", pxGetAppName() );
+        #else
+            wxDirName default_config_dir = (wxDirName)Path::Combine( L".config", pxGetAppName() );
+        #endif
 		wxString xdg_home_value;
 		if( wxGetEnv(L"XDG_CONFIG_HOME", &xdg_home_value) ) {
 			if ( xdg_home_value.IsEmpty() ) {
@@ -446,7 +451,7 @@ public:
 				user_local_dir = (wxDirName)Path::Combine( xdg_home_value, pxGetAppName());
 			}
 		} else {
-			// variable do not exist
+			// variable does not exist
 			user_local_dir = (wxDirName)Path::Combine( GetUserConfigDir() , default_config_dir);
 		}
 
