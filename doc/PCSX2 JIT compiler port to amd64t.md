@@ -42,7 +42,7 @@ Central files:
 * pcsx2/pcsx2/R5900.cpp: EE emulation
 * common/src/x86emitter/x86emitter.cpp
 Questions to resolve:
-* Which instructions have to be ported?
+* Which instructions have to be ported? --> SIB 32bit does not have a corresponding 64-bit equivalent
 * Where does the order of operations change?
 * Which modules are affected?
 
@@ -99,4 +99,34 @@ Instruction encoding on AMD64:
 <img src="processingFlow.png" />
 <img src="operand-size.png" />
 
+Understanding the tables recLUT and recLutReserve_RAM, the macro PC_GETBLOCK, and the pseudo assembler code in _DynGen_DispatcherReg and _DynGen_JITCompile:
 
+Entries in recLUT are used to jump into 64k elements of recLutReserve_RAM:
+
+```
+// 32-bits
+d                       = -bfc0 = 0xFFFF4040;
+e                       = trunc32(0xFFFF4040 << 14) = trunc32(0x3FFFD0100000) = 0xD0100000;
+u                       = recLutReserve_RAM+ 32Mb + 4*0xD0100000;
+                        = 0xb35bc000 + 0x2000000 + 4*0xD0100000;
+0xb35bc000 + 0x2000000 + 4*0xD0100000 + 0xbfc00000
+0xb35bc000 + 0x2000000 + trunc32(340400000) + 0xbfc00000
+0xb35bc000 + 0x2000000 + 0x40400000 + 0xbfc00000
+trunc32(u + 0xbfc00000) = recLutReserve_RAM+ 32MB;
+                        = 0xb35bc000 + 0x2000000;
+                        = 0xB55BC000;
+// 64-bits
+d                       = 0x0 -(bfc0 * sizeof(uptr)/4) = -(bfc0 << 1) = 0xFFFFFFFFFFFE8080;
+e                       = trunc64(0xFFFFFFFFFFFE8080 << 13) = 0xffffFFFFD0100000;
+u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
+                        = 0x7fff6777f000 + 0x4000000 + 8*0x0xffffFFFFD0100000;
+0x7fff6777f000 + 0x4000000 + 8*0xffffFFFFD0100000 + (0xbfc00000 << 1)           = 0x7fff6777f000 + 0x4000000
+0x7fff6777f000 + 0x4000000 + trunc64(7FFFFFFFE80800000) + 0x17F800000           = 0x7fff6777f000 + 0x4000000
+ 
+0x7fff6777f000 + 0x4000000 + 0xFFFFFFFE80800000 +         0x17F800000           = 0x7fff6777f000 + 0x4000000
+<--------------  recLUT[0xbfc0] -------------->   <-0xbfc00000*sizeof(uptr)/4->  <-recLutReserve_RAM + 64MB->
+
+--> recLUT[0xbfc0] = 0x7fff6777f000 + 0x4000000 + 0xFFFFFFFE80800000 
+                   = 0x7FFDEBF7F000
+--> recLUT[0xbfc0] + (0xbfc00000 << 1) = recLutReserve_RAM+ 64MB
+```
