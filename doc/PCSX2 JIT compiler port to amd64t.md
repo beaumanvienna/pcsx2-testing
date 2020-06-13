@@ -96,9 +96,7 @@ Registers on x86_64:
 
 Instruction encoding on AMD64:
 
-<a href="https://pasteboard.co/JcUB16HM.png"><img src="https://pasteboard.co/JcUB16HM.png" alt="1" border="0"></a>
-
-<a href="https://pasteboard.co/JcUBgej.png"><img src="https://pasteboard.co/JcUBgej.png" alt="2" border="0"></a>
-
+<img src="./processingFlow.png" />
+<img src="./operand-size.png" />
 
 
