@@ -96,7 +96,7 @@ Registers on x86_64:
 
 Instruction encoding on AMD64:
 
-<img src="doc/processingFlow.png" />
-<img src="doc/operand-size.png" />
+<img src="processingFlow.png" />
+<img src="operand-size.png" />
 
 
