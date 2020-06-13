@@ -1,8 +1,6 @@
 # PS2 JIT compiler port from i386/32bit to x86_64 code
 
 PCSX2 has 6 recompilers:
-* Micro VU0 	: Vector Unit 0 (Alternative recompiler SuperVU is less compatible)
-* Micro VU1 	: Vector Unit 1
 * R5900-32	: EE RISC processor ("Emotion Engine")
 * R3000A 	: I/O processor
 * VIF0 Unpack  : Vector Unit Interface 0
@@ -32,7 +30,7 @@ logical operations AND, OR, etc.)
 
 
 Notes: 
-* VC0 and VC1 recomilers are disabled in x86_64 version, check DISABLE_SVU. Also on other platforms. How does that affect the performance?
+
 * All processors that support the x86_64 instruction set also support the x86/i386/i686 instruction set. If a processor can run 64-bit code, it can also run 32-bit code. Each process, however, must be homogeneous, so either 32-bit or 64-bit.
 * When generating code for 64-bit platforms, the order of operations may be different compared to generating 32-bit code.
 * x86_64 CPUs 
@@ -98,3 +96,4 @@ Registers on x86_64:
 
 Instruction encoding on AMD64:
 
+<a href="https://ibb.co/LR8RyKM"><img src="https://i.ibb.co/7CXCDhH/1.png" alt="1" border="0"></a>
