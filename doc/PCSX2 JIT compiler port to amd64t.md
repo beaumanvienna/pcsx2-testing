@@ -101,9 +101,27 @@ Instruction encoding on AMD64:
 
 Understanding the tables recLUT and recLutReserve_RAM, the macro PC_GETBLOCK, and the pseudo assembler code in _DynGen_DispatcherReg and _DynGen_JITCompile:
 
-Entries in recLUT are used to jump into 64k elements of recLutReserve_RAM:
+ * Ram is mirrored.
+ * 0x8000_0000 area is physical and cached. Kernel
+ * 0 is virtual memory which is often mapped 1:1 to the physical mem
+ * 0xa000_0000 iirc is for supervisor mode (middle between kernel and user)
+ * 0xb000_0000 is uncached (rom)
+ 
+ * Ps2MemSize::MainRam / 4 = 0x00800000; MainRam = 32MB
+ * Ps2MemSize::Rom / 4  = 0x00100000;     Rom    = 4MB
+ * Ps2MemSize::Rom1 / 4 = 0x00010000      Rom1	 = 256kB
 
+Each entry in recLUT is used to jump into 64k elements (one page) of recLutReserve_RAM according to the program counter of the PS2 cpu.
 ```
+uptr* fp = reclut[ pc >> 16] + pc*sizeof(uptr)/4;
+jump fp[0];
+```
+This is how a recLUT entry is generated:
+```C++
+
+recLUT_SetPage(recLUT, hwLUT, recROM, 0xa000, i, i - 0x1fc0); // i=0x1fc0, pagebase+pageidx=0xbfc00000= start value of pc
+
+
 // 32-bits
 d                       = -bfc0 = 0xFFFF4040;
 e                       = trunc32(0xFFFF4040 << 14) = trunc32(0x3FFFD0100000) = 0xD0100000;
@@ -129,4 +147,5 @@ u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
 --> recLUT[0xbfc0] = 0x7fff6777f000 + 0x4000000 + 0xFFFFFFFE80800000 
                    = 0x7FFDEBF7F000
 --> recLUT[0xbfc0] + (0xbfc00000 << 1) = recLutReserve_RAM+ 64MB
+
 ```
