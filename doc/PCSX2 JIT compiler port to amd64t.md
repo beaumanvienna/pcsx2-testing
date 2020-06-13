@@ -1,10 +1,5 @@
 # PS2 JIT compiler port from i386/32bit to x86_64 code
 
-* Item 1
-* Item 2
-  * Item 2a
-  * Item 2b
-
 PCSX2 has 6 recompilers:
 * Micro VU0 	: Vector Unit 0 (Alternative recompiler SuperVU is less compatible)
 * Micro VU1 	: Vector Unit 1
