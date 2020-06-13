@@ -40,10 +40,11 @@ Notes:
 
 Central files:
 * pcsx2/pcsx2/R5900.cpp: EE emulation
+* /pcsx2/x86/iCore.cpp
+* pcsx2/x86/ix86-32/iR5900-32.cpp: initialization of recLUT and recLutReserve_RAM, recompilation code
 * common/src/x86emitter/x86emitter.cpp
 Questions to resolve:
 * Which instructions have to be ported? --> SIB 32bit does not have a corresponding 64-bit equivalent
-* Where does the order of operations change?
 * Which modules are affected?
 
 Existing instruction sets on i386:
