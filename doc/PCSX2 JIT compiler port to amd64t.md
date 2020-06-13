@@ -1,48 +1,95 @@
-# PCSX2
-[![Travis Build Status](https://travis-ci.org/PCSX2/pcsx2.svg?branch=master)](https://travis-ci.org/PCSX2/pcsx2) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/b67odm0dd506co78/branch/master?svg=true)](https://ci.appveyor.com/project/gregory38/pcsx2/branch/master) [![Coverity Scan Build Status](https://scan.coverity.com/projects/6310/badge.svg)](https://scan.coverity.com/projects/6310)
+# PS2 JIT compiler port from i386/32bit to x86_64 code
 
-PCSX2 is a free and open-source PlayStation 2 (PS2) emulator. Its purpose is to emulate the PS2's hardware, using a combination of MIPS CPU [Interpreters](https://en.wikipedia.org/wiki/Interpreter_\(computing\)), [Recompilers](https://en.wikipedia.org/wiki/Dynamic_recompilation) and a [Virtual Machine](https://en.wikipedia.org/wiki/Virtual_machine) which manages hardware states and PS2 system memory. This allows you to play PS2 games on your PC, with many additional features and benefits.
+PCSX2 has 6 recompilers:
+    • Micro VU0 	: Vector Unit 0 (Alternative recompiler SuperVU is less compatible)
+    • Micro VU1 	: Vector Unit 1
+    • R5900-32	: EE RISC processor ("Emotion Engine")
+    • R3000A 	: I/O processor
+    • VIF0 Unpack  : Vector Unit Interface 0
+    • VIF1 Unpack  : Vector Unit Interface 1
 
-# Project Details
+Terms/abbreviations:
+    • GS		Graphics Synthesizer
+    • SIMD		Single instruction, multiple data
+    • ABI		Application Binary Interface (e.g. Kernel to application), either 32-bit or 64-bit
+    • Abbreviations used in x86 or x86_64 op codes:
+        ◦ byte        	(8 bit)		suffix b						Integer
+        ◦ word        	(2 bytes)   	suffix w						Integer
+        ◦ doubleword  	(4 bytes)   	suffix l							Integer
+        ◦ quadword    	(8 bytes)   	suffix q  e.g. 	movq 	copies 8 bytes			Integer
+        ◦ octword	(16 bytes)	suffix o						Integer
+        ◦ suffix z: fill leading bits with zero, e.g. copy 1 byte into 2 byte register
+        ◦ suffix s: sign extend upper portion e.g. negative byte copied to word fills with ones
+        ◦ cwtl	convert word to doublword
+        ◦ cltq 	convert doubleword to quadword
+        ◦ cqto	convert quodword to octoword
+        ◦ Floating point single 		(S)		4 bytes
+        ◦ Floating point double		(D)		8 bytes
+        ◦ Imm:		‘immediate’ value (a constant) stored in the instruction itself 
+		[e.g. ADDI $1,D0]–The $ indicates the constant/immediate 
+    • ALU		Arithmetic and Logic Unit (performs arithmetic operations like addition and subtraction along with logical operations AND, OR, etc.)
 
-The PCSX2 project has been running for more than ten years. Past versions could only run a few public domain game demos, but newer versions can run most games at full speed, including popular titles such as Final Fantasy X and Devil May Cry 3. Visit the [PCSX2 compatibility list](https://pcsx2.net/compatibility-list.html) to check the latest compatibility status of games (with more than 2500 titles tested), or ask for help in the [official forums](https://forums.pcsx2.net/).
+Notes: 
+    • VC0 and VC1 recomilers are disabled in x86_64 version, check DISABLE_SVU. Also on other platforms. How does that affect the performance?
+    • All processors that support the x86_64 instruction set also support the x86/i386/i686 instruction set. If a processor can run 64-bit code, it can also run 32-bit code. Each process, however, must be homogeneous, so either 32-bit or 64-bit.
+    • When generating code for 64-bit platforms, the order of operations may be different compared to generating 32-bit code.
+    • x86_64 CPUs 
+        ◦ have two modes of operation in Long Mode, a 64-bit mode and compatibility mode. In compatibility mode, the default address size is 32 bits.
+        ◦ still make available x87/MMX registers in 64-bit mode 
+        ◦ provide full x86 16-bit and 32-bit instruction sets without intervening emulation
 
-The latest officially released stable version is version 1.6.0.
+Central files:
+    • pcsx2/pcsx2/R5900.cpp: EE emulation
+    • common/src/x86emitter/x86emitter.cpp
+Questions to resolve:
+    • Which instructions have to be ported?
+    • Where does the order of operations change?
+    • Which modules are affected?
 
-Installers and binaries for both Windows and Linux are available from [our website](https://pcsx2.net/download.html).
+Existing instruction sets on i386:
 
-Development builds are also available from [our website](https://pcsx2.net/download/development.html).
+    • MMX: a single instruction, multiple data (SIMD) instruction set 
+        ◦ 57 instructions
+        ◦ 64-bit wide register file (MM0-MM7)
+        ◦ only integer operations
+        ◦ not able to mix integer-SIMD ops with any floating-point ops
+    • SSE1: Streaming SIMD Extension 1
+        ◦ 128-bit wide register file (XMM0–XMM7) 
+    • SSE2: Streaming SIMD Extensions 2
+    • SSSE3: Supplemental Streaming SIMD Extensions 3
+    • SSE4: Streaming SIMD Extensions 2
+    • AVX: 											Floating Point
+        ◦ Advanced Vector Extensions (since 2011). AVX provides new features, new instructions and a new coding scheme.
+        ◦ AVX uses sixteen YMM registers to perform a Single Instruction on Multiple pieces of Data (see SIMD). 
+        ◦ The AVX instructions support both 128-bit and 256-bit SIMD
+        ◦ Each YMM register can hold and do simultaneous operations (math) on: 
+            ▪ eight 32-bit single-precision floating point numbers or 
+            ▪ four 64-bit double-precision floating point numbers.
+    • AVX2 expands most integer commands to 256 bits and introduces fused multiply-accumulate (FMA) operations
+Primary opcode maps:			(Escape sequences allow for different maps)
+http://sparksandflames.com/files/x86InstructionChart.html
 
-# System Requirements
 
-#### Minimum
+Registers on x86_64:
 
-| Operating System | CPU | GPU | RAM |
-| --- | --- | --- | --- |
-| - Windows 8.1 or newer (32 or 64 bit) <br/> - Ubuntu 18.04/Debian or newer, Arch Linux, or other distro (32 or 64 bit) | - Supports SSE2 <br/> - [PassMark Single Thread Performance](https://www.cpubenchmark.net/singleThread.html) rating near or greater than 1600 <br/> - Two physical cores, with hyperthreading | - Direct3D10 support <br/> - OpenGL 3.x support <br/> - [PassMark G3D Mark](https://www.videocardbenchmark.net/high_end_gpus.html) rating around 3000 (GeForce GTX 750) <br/> - 2 GB Video Memory | 4 GB |
+|8-byte register|Byte 3-0|Byte 1-0|Byte 0|
+| ------------- |:-------------:| -----:|
+|rax|Eax|ax|al|
+|rcx|ecx|cx|cl|
+|rdx|edx|dx|dl|
+|rbx|ebx|bx|bl|
+|rsi|esi|si|sil|
+|rdi|edi|di|dil|
+|rsp|esp|sp|spl|
+|rbp|ebp|bp|bpl|
+|r8|r8d|r8w|r8b|
+|r9|r9d|r9w|r9b|
+|r10|r10d|r10w|r10b|
+|r11|r11d|r11w|r11b|
+|r12|r12d|r12w|r12b|
+|r13|r13d|r13w|r13b|
+|r14|r14d|r14w|r14b|
+|r15|r15d|r15w|r15b|
 
-*Note: Recommended Single Thread Performance is based on moderately complex games. Games that pushed the PS2 hardware to its limits will struggle on CPUs at this level. Some release titles and 2D games which underutilized the PS2 hardware may run on CPUs rated as low as 1200. A quick reference for CPU **intensive games**: [Wiki](https://wiki.pcsx2.net/Category:CPU_intensive_games), [Forum](https://forums.pcsx2.net/Thread-LIST-The-Most-CPU-Intensive-Games) and CPU **light** games: [Forum](https://forums.pcsx2.net/Thread-LIST-Games-that-don-t-need-a-strong-CPU-to-emulate)*
+Instruction encoding on AMD64:
 
-#### Recommended 
-
-| Operating System | CPU | GPU | RAM |
-| --- | --- | --- | --- |
-| - Windows 10 (64 bit) <br/> - Ubuntu 19.04/Debian or newer, Arch Linux, or other distro (64 bit) | - Supports AVX2 <br/> - [PassMark Single Thread Performance](https://www.cpubenchmark.net/singleThread.html) rating near or greater than 2100 <br/> - Four physical cores, with or without hyperthreading | - Direct3D11 support <br/> - OpenGL 4.5 support <br/> - [PassMark G3D Mark](https://www.videocardbenchmark.net/high_end_gpus.html) rating around 6000 (GeForce GTX 1050 Ti) <br/> - 4 GB Video Memory | 8 GB |
-
-*Note: Recommended GPU is based on 3x Internal, ~1080p resolution requirements. Higher resolutions will require stronger cards; 6x Internal, ~4K resolution will require a [PassMark G3D Mark](https://www.videocardbenchmark.net/high_end_gpus.html) rating around 12000 (GeForce GTX 1070 Ti). Just like CPU requirements, this is also highly game dependent. A quick reference for GPU **intensive games**:  [Wiki](https://wiki.pcsx2.net/Category:GPU_intensive_games)*
-
-## Technical Notes
-
-- You need the [Visual C++ 2019 x86 Redistributables](https://support.microsoft.com/en-us/help/2977003/) to run PCSX2.
-- Windows XP and Direct3D9 support was dropped after stable release 1.4.0.
-- Windows 7 and Windows 8 support was dropped after stable release 1.6.0.
-- Make sure to update your operating system and drivers to ensure you have the best experience possible. Having a newer GPU is also recommended so you have the latest supported drivers.
-- Because of copyright issues, and the complexity of trying to work around it, you need a BIOS dump extracted from a legitimately-owned PS2 console to use the emulator. For more information about the BIOS and how to get it from your console, visit [this page](https://pcsx2.net/config-guide/official-english-pcsx2-configuration-guide.html#Bios).
-- PCSX2 uses two CPU cores for emulation by default. A third core can be used via the MTVU speed hack, which is compatible with most games. This can be a significant speedup on CPUs with 3+ cores, but it may be a slowdown on GS-limited games (or on CPUs with fewer than 2 cores). Software renderers will then additionally use however many rendering threads it is set to and will need higher core counts to run efficiently.
-- Requirements benchmarks are based on a statistic from the Passmark CPU bench marking software. When we say "STR", we are referring to Passmark's "Single Thread Rating" statistic. You can look up your CPU on [Passmark's website for CPUs](https://cpubenchmark.net) to see how it compares to PCSX2's requirements.
-
-# Screenshots
-
-![Okami](https://pcsx2.net/images/stories/gitsnaps/okami_n1s.jpg "Okami")       ![Final Fantasy XII](https://pcsx2.net/images/stories/gitsnaps/finalfantasy12izjs_s2.jpg "Final Fantasy XII")       ![Shadow of the Colossus](https://pcsx2.net/images/stories/gitsnaps/sotc6s2.jpg "Shadow of the Colossus")       ![DragonBall Z Budokai Tenkaichi 3](https://pcsx2.net/images/stories/gitsnaps/DBZ-BT-3s.jpg "DragonBall Z Budokai Tenkaichi 3")     ![Kingdom Hearts 2: Final Mix](https://pcsx2.net/images/stories/gitsnaps/kh2_fm_n1s2.jpg "Kingdom Hearts 2: Final Mix")     ![God of War 2](https://pcsx2.net/images/stories/gitsnaps/gow2_s2.jpg "God of War 2")       ![Metal Gear Solid 3: Snake Eater](https://pcsx2.net/images/stories/gitsnaps/mgs3-1_s2.jpg "Metal Gear Solid 3: Snake Eater")       ![Rogue Galaxy](https://pcsx2.net/images/stories/gitsnaps/rogue_galaxy_n1s2.jpg "Rogue Galaxy")
-
-Want more? [Check out the PCSX2 website](https://pcsx2.net/demo-videos-screenshots/screenshots.html).
