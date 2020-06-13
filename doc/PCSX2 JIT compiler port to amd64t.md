@@ -107,9 +107,9 @@ Understanding the tables recLUT and recLutReserve_RAM, the macro PC_GETBLOCK, an
  * 0xa000_0000 iirc is for supervisor mode (middle between kernel and user)
  * 0xb000_0000 is uncached (rom)
  
- * Ps2MemSize::MainRam / 4 = 0x00800000; MainRam = 32MB
- * Ps2MemSize::Rom / 4  = 0x00100000;     Rom    = 4MB
- * Ps2MemSize::Rom1 / 4 = 0x00010000      Rom1	 = 256kB
+ * Ps2MemSize::MainRam / 4 = 0x00800000; MainRam = 32MB (i386) 64MB (x64)
+ * Ps2MemSize::Rom / 4  = 0x00100000;     Rom    = 4MB (i386) 8MB (x64)
+ * Ps2MemSize::Rom1 / 4 = 0x00010000      Rom1	 = 256kB (i386) 512MB (x64)
 
 Each entry in recLUT is used to jump into 64k elements (one page) of recLutReserve_RAM according to the program counter of the PS2 cpu.
 ```
