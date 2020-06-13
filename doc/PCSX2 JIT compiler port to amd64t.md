@@ -119,7 +119,8 @@ jump fp[0];
 This is how a recLUT entry is generated:
 ```C++
 
-recLUT_SetPage(recLUT, hwLUT, recROM, 0xa000, i, i - 0x1fc0); // i=0x1fc0, pagebase+pageidx=0xbfc00000= start value of pc
+recLUT_SetPage(recLUT, hwLUT, recROM, 0xa000, i, i - 0x1fc0); // i=0x1fc0
+// --> pagebase+pageidx=0xbfc00000= start value of pc
 
 
 // 32-bits
