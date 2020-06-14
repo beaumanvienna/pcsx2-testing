@@ -43,6 +43,7 @@ Central files:
 * /pcsx2/x86/iCore.cpp
 * pcsx2/x86/ix86-32/iR5900-32.cpp: initialization of recLUT and recLutReserve_RAM, recompilation code
 * common/src/x86emitter/x86emitter.cpp
+
 Questions to resolve:
 * Which instructions have to be ported? --> SIB 32bit does not have a corresponding 64-bit equivalent
 * Which modules are affected?
