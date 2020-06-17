@@ -156,7 +156,7 @@ u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
 
 |// i386 address | i386 jitted assembler | x64 address | x64 jitted assembler |
 | ------------------------- | ------------------------- | ------------------------- | ------------------------- |
-   0x30000000|  nop|   0x210000000|  nop
+      0x30000000|  nop|   0x210000000|  nop
    0x30000001|  mov    0x58b7e82c,%eax|   0x210000001|  movabs 0x555557e05b0c,%eax
    0x30000006|  cltd   |   0x21000000a|  cltd   
    0x30000007|  mov    %eax,0x58b7e770|   0x21000000b|  movabs %rax,0x555557e05a54
@@ -198,8 +198,8 @@ u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
 -|-|   0x2100000c0|  movabs 0x555557e04de0,%eax
    0x3000006d|  sub    0x58b7db40,%eax|   0x2100000c9|  sub    %eax,%ebx
 -|-|   0x2100000cb|  mov    %ebx,%eax
-   0x30000073|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x2100000cd|  jns    0x2100000dc // skip next two if not signed
--|-|   0x2100000cf|  movabs $0x555348102f62,%rax
+   0x30000073|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x2100000cd|  jns    0x2100000dc
+-|-|   0x2100000cf|  movabs $0x55555810303b,%rax
 -|-|   0x2100000d9|  rex.W jmpq *%rax
    0x30000079|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x2100000dc|  movabs $0x555558103000,%rax
 -|-|   0x2100000e6|  rex.W jmpq *%rax
@@ -213,8 +213,8 @@ u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
 -|-|   0x210000111|  movabs 0x555557e04de0,%eax
    0x30000096|  sub    0x58b7db40,%eax|   0x21000011a|  sub    %eax,%ebx
 -|-|   0x21000011c|  mov    %ebx,%eax
-   0x3000009c|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x21000011e|  jns    0x21000012d // skip next two if not signed
--|-|   0x210000120|  movabs $0x555348102f11,%rax
+   0x3000009c|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x21000011e|  jns    0x21000012d
+-|-|   0x210000120|  movabs $0x55555810303b,%rax
 -|-|   0x21000012a|  rex.W jmpq *%rax
    0x300000a2|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x21000012d|  movabs $0x555558103000,%rax
 -|-|   0x210000137|  rex.W jmpq *%rax
