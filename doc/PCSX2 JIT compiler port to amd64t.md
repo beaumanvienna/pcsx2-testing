@@ -157,75 +157,64 @@ u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
 |// i386 address | i386 jitted assembler | x64 address | x64 jitted assembler |
 | ------------------------- | ------------------------- | ------------------------- | ------------------------- |
    0x30000000|  nop|   0x210000000|  nop
-   0x30000001|  mov    0x58b7e82c,%eax|   0x210000001|  movabs 0x555557e1eb0c,%rax
-   0x30000006|  cltd   |   0x21000000b|  cltd   
-   0x30000007|  mov    %eax,0x58b7e770|   0x21000000c|  movabs %rax,0x555557e1ea54
-   0x3000000c|  mov    %edx,0x58b7e774|   0x210000016|  mov    %rdx,%rax
--|-|   0x210000019|  movabs %rax,0x555557e1ea50
-   0x30000012|  nop|   0x210000023|  nop
-   0x30000013|  nop|   0x210000024|  nop
-   0x30000014|  cmpl   $0x0,0x58b7e774|   0x210000025|  movabs 0x555557e1ea54,%rax
-   0x3000001b|  mov    $0x1,%eax|   0x21000002f|  cmp    $0x0,%rax
--|-|   0x210000033|  movabs $0x1,%rax
-   0x30000020|  jl     0x3000002f|   0x21000003d|  jl     0x21000005e
-   0x30000022|  jg     0x3000002d|   0x21000003f|  jg     0x21000005b
-   0x30000024|  cmpl   $0x59,0x58b7e770|   0x210000041|  movabs 0x555557e1ea50,%rax
--|-|   0x21000004b|  cmp    $0x59,%rax
--|-|   0x21000004f|  movabs $0x1,%rax
-   0x3000002b|  jb     0x3000002f|   0x210000059|  jb     0x21000005e
-   0x3000002d|  xor    %eax,%eax|   0x21000005b|  xor    %rax,%rax
-   0x3000002f|  mov    %eax,0x58b7e5e0|   0x21000005e|  movabs %rax,0x555557e1e8c0
-   0x30000034|  movl   $0x0,0x58b7e5e4|   0x210000068|  xor    %rax,%rax
--|-|   0x21000006b|  movabs %rax,0x555557e1e8c4
-   0x3000003e|  nop|   0x210000075|  nop
--|-|   0x210000076|  movabs 0x555557e1e8c0,%rax
--|-|   0x210000080|  and    $0xffff,%rax
--|-|   0x210000086|  add    %al,(%rax)
--|-|   0x210000088|  add    %al,(%rax)
--|-|   0x21000008a|  mov    %rax,%rbx
--|-|   0x21000008d|  movabs 0x0,%rax
--|-|   0x210000097|  and    $0xffff,%rax
--|-|   0x21000009d|  add    %al,(%rax)
--|-|   0x21000009f|  add    %al,(%rax)
-   0x3000003f|  cmpl   $0x0,0x58b7e5e0|   0x2100000a1|  cmp    %rbx,%rax
-   0x30000046|  jne    0x30000055|   0x2100000a4|  jne    0x2100000da
-   0x30000048|  cmpl   $0x0,0x58b7e5e4|   0x2100000a6|  movabs 0x555557e1e8c4,%rax
--|-|   0x2100000b0|  and    $0xffff,%rax
--|-|   0x2100000b6|  add    %al,(%rax)
--|-|   0x2100000b8|  add    %al,(%rax)
--|-|   0x2100000ba|  mov    %rax,%rbx
--|-|   0x2100000bd|  movabs 0x0,%rax
--|-|   0x2100000c7|  and    $0xffff,%rax
--|-|   0x2100000cd|  add    %al,(%rax)
--|-|   0x2100000cf|  add    %al,(%rax)
--|-|   0x2100000d1|  cmp    %rbx,%rax
-   0x3000004f|  je     0x3000007e|   0x2100000d4|  je     0x21000012d
-   0x30000055|  nop|   0x2100000da|  nop
-   0x30000056|  movl   $0xbfc00024,0x58b7e878|   0x2100000db|  movabs $0xbfc00024,%rax
-   0x30000060|  mov    0x58b7e990,%eax|   0x2100000e5|  movabs %rax,0x555557e1eb58
-   0x30000065|  add    $0xb,%eax|   0x2100000ef|  movabs 0x555557e1ec70,%rax
-   0x30000068|  mov    %eax,0x58b7e990|   0x2100000f9|  add    $0xb,%rax
--|-|   0x2100000fd|  movabs %rax,0x555557e1ec70
--|-|   0x210000107|  mov    %rax,%rbx
--|-|   0x21000010a|  movabs 0x555557e1dde0,%rax
-   0x3000006d|  sub    0x58b7db40,%eax|   0x210000114|  sub    %rax,%rbx
--|-|   0x210000117|  mov    %rbx,%rax
-   0x30000073|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x21000011a|  js     0x25811c039
--|-|   0x210000120|  movabs $0x55555811c000,%rax
-   0x30000079|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x21000012a|  rex.W jmpq *%rax
-   0x3000007e|  nop|   0x21000012d|  nop
-   0x3000007f|  movl   $0xbfc00014,0x58b7e878|   0x21000012e|  movabs $0xbfc00014,%rax
-   0x30000089|  mov    0x58b7e990,%eax|   0x210000138|  movabs %rax,0x555557e1eb58
--|-|   0x210000142|  movabs 0x555557e1ec70,%rax
-   0x3000008e|  add    $0xb,%eax|   0x21000014c|  add    $0xb,%rax
-   0x30000091|  mov    %eax,0x58b7e990|   0x210000150|  movabs %rax,0x555557e1ec70
--|-|   0x21000015a|  mov    %rax,%rbx
--|-|   0x21000015d|  movabs 0x555557e1dde0,%rax
-   0x30000096|  sub    0x58b7db40,%eax|   0x210000167|  sub    %rax,%rbx
--|-|   0x21000016a|  mov    %rbx,%rax
-   0x3000009c|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x21000016d|  js     0x25811c039
--|-|   0x210000173|  movabs $0x55555811c000,%rax
-   0x300000a2|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x21000017d|  rex.W jmpq *%rax
-
-
-
+   0x30000001|  mov    0x58b7e82c,%eax|   0x210000001|  movabs 0x555557e05b0c,%eax
+   0x30000006|  cltd   |   0x21000000a|  cltd   
+   0x30000007|  mov    %eax,0x58b7e770|   0x21000000b|  movabs %rax,0x555557e05a54
+   0x3000000c|  mov    %edx,0x58b7e774|   0x210000015|  mov    %edx,%eax
+-|-|   0x210000017|  movabs %rax,0x555557e05a50
+   0x30000012|  nop|   0x210000021|  nop
+   0x30000013|  nop|   0x210000022|  nop
+   0x30000014|  cmpl   $0x0,0x58b7e774|   0x210000023|  movabs 0x555557e05a54,%eax
+   0x3000001b|  mov    $0x1,%eax|   0x21000002c|  cmp    $0x0,%eax
+-|-|   0x21000002f|  mov    $0x1,%eax
+   0x30000020|  jl     0x3000002f|   0x210000034|  jl     0x21000004d
+   0x30000022|  jg     0x3000002d|   0x210000036|  jg     0x21000004b
+   0x30000024|  cmpl   $0x59,0x58b7e770|   0x210000038|  movabs 0x555557e05a50,%eax
+-|-|   0x210000041|  cmp    $0x59,%eax
+-|-|   0x210000044|  mov    $0x1,%eax
+   0x3000002b|  jb     0x3000002f|   0x210000049|  jb     0x21000004d
+   0x3000002d|  xor    %eax,%eax|   0x21000004b|  xor    %eax,%eax
+   0x3000002f|  mov    %eax,0x58b7e5e0|   0x21000004d|  movabs %rax,0x555557e058c0
+   0x30000034|  movl   $0x0,0x58b7e5e4|   0x210000057|  xor    %eax,%eax
+-|-|   0x210000059|  movabs %rax,0x555557e058c4
+   0x3000003e|  nop|   0x210000063|  nop
+-|-|   0x210000064|  movabs 0x555557e058c0,%eax
+-|-|   0x21000006d|  mov    %eax,%ebx
+-|-|   0x21000006f|  int3   
+-|-|   0x210000070|  add    %al,(%rax)
+-|-|   0x210000072|  add    %al,(%rax)
+-|-|   0x210000074|  add    %al,(%rax)
+-|-|   0x210000076|  add    %al,(%rax)
+   0x3000003f|  cmpl   $0x0,0x58b7e5e0|   0x210000078|  cmp    %ebx,%eax
+   0x30000046|  jne    0x30000055|   0x21000007a|  jne    0x210000098
+   0x30000048|  cmpl   $0x0,0x58b7e5e4|   0x21000007c|  movabs 0x555557e058c4,%eax
+-|-|   0x210000085|  mov    %eax,%ebx
+-|-|   0x210000087|  movabs 0x0,%eax
+-|-|   0x210000090|  cmp    %ebx,%eax
+   0x3000004f|  je     0x3000007e|   0x210000092|  je     0x2100000e0
+   0x30000055|  nop|   0x210000098|  nop
+   0x30000056|  movl   $0xbfc00024,0x58b7e878|   0x210000099|  mov    $0xbfc00024,%eax
+   0x30000060|  mov    0x58b7e990,%eax|   0x21000009e|  movabs %rax,0x555557e05b58
+   0x30000065|  add    $0xb,%eax|   0x2100000a8|  movabs 0x555557e05c70,%eax
+   0x30000068|  mov    %eax,0x58b7e990|   0x2100000b1|  add    $0xb,%eax
+-|-|   0x2100000b4|  movabs %rax,0x555557e05c70
+-|-|   0x2100000be|  mov    %eax,%ebx
+-|-|   0x2100000c0|  movabs 0x555557e04de0,%eax
+   0x3000006d|  sub    0x58b7db40,%eax|   0x2100000c9|  sub    %eax,%ebx
+-|-|   0x2100000cb|  mov    %ebx,%eax
+   0x30000073|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x2100000cd|  js     0x25810303b
+-|-|   0x2100000d3|  movabs $0x58103000,%rax
+   0x30000079|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x2100000dd|  rex.W jmpq *%rax
+   0x3000007e|  nop|   0x2100000e0|  nop
+   0x3000007f|  movl   $0xbfc00014,0x58b7e878|   0x2100000e1|  mov    $0xbfc00014,%eax
+   0x30000089|  mov    0x58b7e990,%eax|   0x2100000e6|  movabs %rax,0x555557e05b58
+-|-|   0x2100000f0|  movabs 0x555557e05c70,%eax
+   0x3000008e|  add    $0xb,%eax|   0x2100000f9|  add    $0xb,%eax
+   0x30000091|  mov    %eax,0x58b7e990|   0x2100000fc|  movabs %rax,0x555557e05c70
+-|-|   0x210000106|  mov    %eax,%ebx
+-|-|   0x210000108|  movabs 0x555557e04de0,%eax
+   0x30000096|  sub    0x58b7db40,%eax|   0x210000111|  sub    %eax,%ebx
+-|-|   0x210000113|  mov    %ebx,%eax
+   0x3000009c|  js     0x58d79019 <_ZL16eeRecDispatchers+25>|   0x210000115|  js     0x25810303b
+-|-|   0x21000011b|  movabs $0x58103000,%rax
+   0x300000a2|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x210000125|  rex.W jmpq *%rax
