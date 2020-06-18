@@ -1,6 +1,8 @@
 # PS2 JIT compiler port from i386/32bit to x86_64 code
 
 PCSX2 has 6 recompilers:
+* microVU0
+* mircoVU1
 * R5900-32	: EE RISC processor ("Emotion Engine")
 * R3000A 	: I/O processor
 * VIF0 Unpack  : Vector Unit Interface 0
