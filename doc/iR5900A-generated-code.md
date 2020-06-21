@@ -13,14 +13,14 @@
    0x631ac29b <m+38601371>|  add    $0x50,%ecx|   0x55556499f372 <m+77202290>|  add    $0x50,%ecx|-
    0x631ac29e <m+38601374>|  mov    %ecx,%eax|   0x55556499f375 <m+77202293>|  mov    %ecx,%eax|-
    0x631ac2a0 <m+38601376>|  shr    $0xc,%eax|   0x55556499f377 <m+77202295>|  shr    $0xc,%eax|-
-   0x631ac2a3 <m+38601379>|  mov    -0x48600ff0(,%eax,4),%eax|   0x55556499f37a <m+77202298>|  shl    $0x3,%rax|-
-   0x631ac2aa <m+38601386>|  mov    $0x631ac2bd,%ebx|   0x55556499f37e <m+77202302>|  movabs $0x7fff8919f010,%rbx|-
-   0x631ac2af <m+38601391>|  add    %eax,%ecx|   0x55556499f388 <m+77202312>|  mov    (%rax,%rbx,1),%eax|-
-   0x631ac2b1 <m+38601393>|  js     0x70cde140 <_ZL21m_IndirectDispatchers+320>|   0x55556499f38b <m+77202315>|  movabs $0x55556499f3a3,%rbx|-
-   0x631ac2b7 <m+38601399>|  movlps (%edx),%xmm0|   0x55556499f395 <m+77202325>|  add    %eax,%ecx|-
-   0x631ac2ba <m+38601402>|  movlps %xmm0,(%ecx)|   0x55556499f397 <m+77202327>|  js     0x55556899f140 <m+144310592>|-
--|-|   0x55556499f39d <m+77202333>|  movlps (%rdx),%xmm0|-
--|-|   0x55556499f3a0 <m+77202336>|  movlps %xmm0,(%rcx)|-
+-|-|   0x55556499f37a <m+77202298>|  shl    $0x3,%rax|-
+-|-|   0x55556499f37e <m+77202302>|  movabs $0x7fff8919f010,%rbx|-
+   0x631ac2a3 <m+38601379>|  mov    -0x48600ff0(,%eax,4),%eax|   0x55556499f388 <m+77202312>|  mov    (%rax,%rbx,1),%eax|-
+   0x631ac2aa <m+38601386>|  mov    $0x631ac2bd,%ebx|   0x55556499f38b <m+77202315>|  movabs $0x55556499f3a3,%rbx|-
+   0x631ac2af <m+38601391>|  add    %eax,%ecx|   0x55556499f395 <m+77202325>|  add    %eax,%ecx|-
+   0x631ac2b1 <m+38601393>|  js     0x70cde140 <_ZL21m_IndirectDispatchers+320>|   0x55556499f397 <m+77202327>|  js     0x55556899f140 <m+144310592>|-
+   0x631ac2b7 <m+38601399>|  movlps (%edx),%xmm0|   0x55556499f39d <m+77202333>|  movlps (%rdx),%xmm0|-
+   0x631ac2ba <m+38601402>|  movlps %xmm0,(%ecx)|   0x55556499f3a0 <m+77202336>|  movlps %xmm0,(%rcx)|-
    0x631ac2bd <m+38601405>|  nop|   0x55556499f3a3 <m+77202339>|  nop|-
    0x631ac2be <m+38601406>|  nop|   0x55556499f3a4 <m+77202340>|  nop|-
    0x631ac2bf <m+38601407>|  mov    $0x60cd51c0,%edx|   0x55556499f3a5 <m+77202341>|  mov    $0x5fff75c0,%edx|-
