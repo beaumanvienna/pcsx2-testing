@@ -222,14 +222,37 @@ u                       = recLutReserve_RAM + 64MB + 8*0xffffFFFFD0100000;
    0x300000a2|  jmp    0x58d79000 <_ZL16eeRecDispatchers>|   0x21000012f|  rex.W jmpq *%rax|-
 
 
-well I think tellow was saying resource system used on mac is the same as linux, think it's the same for BSD too (don't see why it wouldn't be). if you don't want to use the resource system, you can put it in the bin folder and copy it into the install dir and just default gsdx to open that file. Current fonts I don't think supports multi lang. Font can be changed in the gsdx settings. Don't think the current fonts support multi lang, just defaults we though would we reliable on a given system (obviously it's wishful thinking).
-relevant part of GSdx is here
-https://github.com/PCSX2/pcsx2/blob/master/plugins/GSdx/Renderers/Common/GSOsdManager.cpp#L26
-default is set here https://github.com/PCSX2/pcsx2/blob/master/plugins/GSdx/GSdx.cpp#L361
-you can also see LoadResource
-In gsdx you have two different uis. GTK for unix systems and Win32 for Windows
-things are handled differently
-you can probably guess by the name GSdx, but it didn't used to support GL or Linux
-I actually donno offhand if multi lang was actually enabled
-I know it can do it because we use utf32 or something
-well utf8 from core converted to utf32
+#original Arch Linux prompt
+#PS1='[\u@\h \W]\$ '
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
