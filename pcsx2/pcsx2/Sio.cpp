@@ -290,11 +290,9 @@ SIO_WRITE sioWriteMultitap(u8 data)
 		case 0x21:
 			{
 				sio.slot[sio.port] = data;
-
 				u32 ret = PADsetSlot(sio.port+1, data+1);
 				sio.buf[5] = ret? data : 0xFF;
-				sio.buf[6] = ret? 0x5A : 0x66;
-			}
+				sio.buf[6] = ret? 0x5A : 0x66;			}
 			break;
 
 		case 0x22:

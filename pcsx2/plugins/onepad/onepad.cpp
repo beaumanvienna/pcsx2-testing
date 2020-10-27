@@ -102,7 +102,7 @@ PS2EgetLibVersion2(u32 type)
     return (version << 16) | (revision << 8) | build;
 }
 
-void __Log(const char *fmt, ...)
+void __LogOP(const char *fmt, ...)
 {
     va_list list;
 

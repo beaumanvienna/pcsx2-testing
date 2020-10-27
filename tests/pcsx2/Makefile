@@ -7,7 +7,7 @@ LINKER_OBJECTS += ../../pcsx2/build/common/src/x86emitter/libx86emitter.a
 LINKER_OBJECTS += ../../pcsx2/build/common/src/Utilities/libUtilities.a
 LINKER_OBJECTS += ../../pcsx2/build/common/src/Utilities/libUtilities_NO_TLS.a
 LINKER_OBJECTS += ../../pcsx2/build/3rdparty/fmt/fmt/libfmt.a
-#LINKER_OBJECTS += ../../pcsx2/build/plugins/onepad/libonepad.a
+LINKER_OBJECTS += ../../pcsx2/build/plugins/onepad/libonepad.a
 #LINKER_OBJECTS += ../../pcsx2/build/plugins/GSdx/libGSdx.a
 
 PCSX2_USE_GTK3 = $(shell find /usr/ -name "*wx_gtk3u_core-3.0*.so" 2>/dev/null)

@@ -212,6 +212,8 @@ void CALLBACK PADclose();
 void CALLBACK PADshutdown();
 void CALLBACK PADsetSettingsDir(const char *dir);
 void CALLBACK PADsetLogDir(const char *dir);
+s32 CALLBACK PADsetSlot(u8 port, u8 slot);
+s32 CALLBACK PADfreeze(int mode, freezeData *data);
 
 // PADkeyEvent is called every vsync (return NULL if no event)
 keyEvent *CALLBACK PADkeyEvent();

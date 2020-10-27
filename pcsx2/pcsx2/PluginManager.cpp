@@ -399,7 +399,9 @@ static const LegacyApi_ReqMethod s_MethMessReq_PAD[] =
 	// are for multitap support only.  They should either be optional or offer
 	// NOP fallbacks, to allow older plugins to retain functionality.
 	{	"PADsetSlot",		(vMeth**)&PADsetSlot,	(vMeth*)PAD_setSlot },
+#ifndef BUILTIN_PAD_PLUGIN
 	{	"PADqueryMtap",		(vMeth**)&PADqueryMtap,	(vMeth*)PAD_queryMtap },
+#endif
 	{ NULL },
 };
 
@@ -875,10 +877,11 @@ void SysCorePlugins::Load( const wxString (&folders)[PluginId_Count] )
 
 	indent.LeaveScope();
 
-	// Hack for PAD's stupid parameter passed on Init
+	
+#ifndef BUILTIN_PAD_PLUGIN
 	PADinit = (_PADinit)m_info[PluginId_PAD]->CommonBindings.Init;
 	m_info[PluginId_PAD]->CommonBindings.Init = _hack_PADinit;
-
+#endif
 	Console.WriteLn( Color_StrongBlue, "Plugins loaded successfully.\n" );
 
 	// HACK!  Manually bind the Internal MemoryCard plugin for now, until
