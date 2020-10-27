@@ -25,6 +25,7 @@
 #include <wx/stdpaths.h>
 #include "DebugTools/Debug.h"
 #include <memory>
+#include <SDL.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // PathDefs Namespace -- contains default values for various pcsx2 path names and locations.
@@ -152,15 +153,8 @@ namespace PathDefs
 	{
 		switch( mode )
 		{
-            #warning "JC: modified"
-//#ifdef XDG_STD
 			// Move all user data file into central configuration directory (XDG_CONFIG_DIR)
-			case DocsFolder_User: return GetUserLocalDataDir();
-/*
-#else
-			case DocsFolder_User:	return (wxDirName)Path::Combine( wxStandardPaths::Get().GetDocumentsDir(), pxGetAppName() );
-#endif
-*/
+			case DocsFolder_User:	return GetUserLocalDataDir();
 			case DocsFolder_Custom: return CustomDocumentsFolder;
 
 			jNO_DEFAULT
@@ -194,7 +188,7 @@ namespace PathDefs
 
 	wxDirName GetBios()
 	{
-		return GetDocuments() + Base::Bios();;
+		return GetDocuments() + Base::Bios();
 	}
 
 	wxDirName GetCheats()
@@ -528,6 +522,7 @@ AppConfig::AppConfig()
 	#endif
 	EnableSpeedHacks	= true;
 	EnableGameFixes		= false;
+	EnableFastBoot		= true;
 
 	EnablePresets		= true;
 	PresetIndex			= 1;
@@ -649,6 +644,7 @@ void AppConfig::LoadSaveRootItems( IniInterface& ini )
 
 	IniEntry( EnableSpeedHacks );
 	IniEntry( EnableGameFixes );
+	IniEntry( EnableFastBoot );
 
 	IniEntry( EnablePresets );
 	IniEntry( PresetIndex );
@@ -674,6 +670,9 @@ void AppConfig::LoadSave( IniInterface& ini )
 	BaseFilenames	.LoadSave( ini );
 	GSWindow		.LoadSave( ini );
 	Framerate		.LoadSave( ini );
+#ifndef DISABLE_RECORDING
+	inputRecording.loadSave(ini);
+#endif
 	Templates		.LoadSave( ini );
 
 	ini.Flush();
@@ -685,8 +684,8 @@ AppConfig::ConsoleLogOptions::ConsoleLogOptions()
 	, DisplaySize( wxSize( 680, 560 ) )
 	, Theme(L"Default")
 {
-	Visible		= true;
-	AutoDock	= true;
+	Visible		= false;
+	AutoDock	= false;
 	FontSize	= 8;
 }
 
@@ -701,9 +700,11 @@ void AppConfig::ConsoleLogOptions::LoadSave( IniInterface& ini, const wxChar* lo
 	IniEntry( FontSize );
 	IniEntry( Theme );
 }
-
+extern std::string gPathToFirmwarePS2;
 void AppConfig::FolderOptions::ApplyDefaults()
 {
+    UseDefaultBios = false;
+    g_Conf->BaseFilenames.Bios = (wxFileName)gPathToFirmwarePS2;
 	if( UseDefaultBios )		Bios		  = PathDefs::GetBios();
 	if( UseDefaultSnapshots )	Snapshots	  = PathDefs::GetSnapshots();
 	if( UseDefaultSavestates )	Savestates	  = PathDefs::GetSavestates();
@@ -726,8 +727,9 @@ AppConfig::FolderOptions::FolderOptions()
 	, Cheats		( PathDefs::GetCheats() )
 	, CheatsWS      ( PathDefs::GetCheatsWS() )
 
-	, RunIso( PathDefs::GetDocuments() )			// raw default is always the Documents folder.
-	, RunELF( PathDefs::GetDocuments() )			// raw default is always the Documents folder.
+	, RunIso	( PathDefs::GetDocuments() )			// raw default is always the Documents folder.
+	, RunELF	( PathDefs::GetDocuments() )			// raw default is always the Documents folder.
+	, RunDisc	( PathDefs::GetDocuments().GetFilename() )
 {
 	bitset = 0xffffffff;
 }
@@ -767,6 +769,7 @@ void AppConfig::FolderOptions::LoadSave( IniInterface& ini )
 
 	IniEntryDirFile( RunIso, rel );
 	IniEntryDirFile( RunELF, rel );
+	IniEntryDirFile( RunDisc, rel );
 
 	if( ini.IsLoading() )
 	{
@@ -812,11 +815,12 @@ void AppConfig::FilenameOptions::LoadSave( IniInterface& ini )
 }
 
 // ------------------------------------------------------------------------
+extern SDL_Window* gWindow;
 AppConfig::GSWindowOptions::GSWindowOptions()
 {
 	CloseOnEsc				= true;
 	DefaultToFullscreen		= false;
-	AlwaysHideMouse			= false;
+	AlwaysHideMouse			= true;
 	DisableResizeBorders	= false;
 	DisableScreenSaver		= true;
 
@@ -898,6 +902,20 @@ void AppConfig::GSWindowOptions::LoadSave( IniInterface& ini )
 
 	if( ini.IsLoading() ) SanityCheck();
 }
+
+#ifndef DISABLE_RECORDING
+AppConfig::InputRecordingOptions::InputRecordingOptions()
+	: VirtualPadPosition(wxDefaultPosition)
+{
+}
+
+void AppConfig::InputRecordingOptions::loadSave(IniInterface& ini)
+{
+	ScopedIniGroup path(ini, L"InputRecording");
+
+	IniEntry(VirtualPadPosition);
+}
+#endif
 
 // ----------------------------------------------------------------------------
 AppConfig::FramerateOptions::FramerateOptions()
@@ -1035,7 +1053,6 @@ bool AppConfig::IsOkApplyPreset(int n, bool ignoreMTVU)
 	Framerate.SlomoScalar = original_Framerate.SlomoScalar;
 	Framerate.TurboScalar = original_Framerate.TurboScalar;
 
-	EnableSpeedHacks	= false;
 	EnableGameFixes		= false;
 
 	EmuOptions.EnablePatches		= true;
@@ -1256,7 +1273,21 @@ static void LoadUiSettings()
 	g_Conf->LoadSave( loader );
 
 	if( !wxFile::Exists( g_Conf->CurrentIso ) )
+	{
 		g_Conf->CurrentIso.clear();
+	}
+
+#if defined(_WIN32)
+	if( !g_Conf->Folders.RunDisc.DirExists() )
+	{
+		g_Conf->Folders.RunDisc.Clear();
+	}
+#else
+	if (!g_Conf->Folders.RunDisc.Exists())
+	{
+		g_Conf->Folders.RunDisc.Clear();
+	}
+#endif
 
 	sApp.DispatchUiSettingsEvent( loader );
 }
@@ -1289,7 +1320,21 @@ void AppLoadSettings()
 static void SaveUiSettings()
 {	
 	if( !wxFile::Exists( g_Conf->CurrentIso ) )
+	{
 		g_Conf->CurrentIso.clear();
+	}
+
+#if defined(_WIN32)
+	if (!g_Conf->Folders.RunDisc.DirExists())
+	{
+		g_Conf->Folders.RunDisc.Clear();
+	}
+#else
+	if (!g_Conf->Folders.RunDisc.Exists())
+	{
+		g_Conf->Folders.RunDisc.Clear();
+	}
+#endif
 
 	sApp.GetRecentIsoManager().Add( g_Conf->CurrentIso );
 

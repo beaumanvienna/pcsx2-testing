@@ -32,7 +32,7 @@
 #include "Debugger/DisassemblyDialog.h"
 
 #ifndef DISABLE_RECORDING
-#	include "Recording/RecordingControls.h"
+#	include "Recording/InputRecordingControls.h"
 #	include "Recording/InputRecording.h"
 #endif
 
@@ -50,6 +50,12 @@
 #include <gtk/gtk.h>
 #endif
 
+#include <SDL.h>
+#include <SDL_syswm.h>
+
+typedef unsigned int uint32;
+//int  GSopen2(void** dsp, uint32 flags);
+
 // Safe to remove these lines when this is handled properly.
 #ifdef __WXMAC__
 // Great joy....
@@ -64,7 +70,65 @@
 #include <wx/osx/private.h>		// needed to implement the app!
 #endif
 
-wxIMPLEMENT_APP(Pcsx2App);
+wxIMPLEMENT_APP_NO_MAIN(Pcsx2App);
+
+void initEE();
+void initIOP();
+void iCoreInit();
+void initCOP0();
+void initCounters();
+void initGSState();
+void initHW();
+void initIopCounters();
+void initIopMem();
+void initMemory();
+void initR3000A();
+void initR5900();
+void initR5900Op();
+void initVif0_Dma();
+void initVif1_Dma();
+void initNewVif_unpack();
+extern bool requestShutdown;
+
+int pcsx2_main(int argc_local, char* argv_local[])
+{
+    
+/*    initEE();
+    initIOP();
+    iCoreInit();
+    initCOP0();
+    initCounters();
+#ifdef PCSX2_DEVBUILD
+    initGSState();
+#endif
+    initHW();
+    initIopCounters();
+    initIopMem();
+    initMemory();
+    initR3000A();
+    initR5900();
+    initR5900Op();
+    initVif0_Dma();
+    initVif1_Dma();
+    initNewVif_unpack();*/
+    
+    wxEntryStart(argc_local,argv_local);
+    wxTheApp->CallOnInit();
+    wxTheApp->OnRun();
+    //ClosePlugins();
+    wxTheApp->OnExit();
+    delete wxTheApp;
+
+    if (g_Conf) g_Conf.reset();
+    //requestShutdown = false;
+    
+    return 0;
+}
+
+void wxRequestExit(void)
+{
+    wxTheApp->ExitMainLoop();
+}
 
 std::unique_ptr<AppConfig> g_Conf;
 
@@ -428,20 +492,12 @@ public:
 #ifdef __POSIX__
 	wxString GetUserLocalDataDir() const
 	{
-		// I got memory corruption inside wxGetEnv when I heavily toggle the GS renderer (F9). It seems wxGetEnv
-		// isn't thread safe? To avoid any issue on this read only variable, I cache the result.
+
 		static wxString cache_dir;
 		if (!cache_dir.IsEmpty()) return cache_dir;
 
-		// Note: GetUserLocalDataDir() on linux return $HOME/.pcsx2 unfortunately it does not follow the XDG standard
-		// So we re-implement it, to follow the standard.
 		wxDirName user_local_dir;
-        #warning "JC: modified"
-        #ifdef __x86_64__
-            wxDirName default_config_dir = (wxDirName)Path::Combine( L".marley", pxGetAppName() );
-        #else
-            wxDirName default_config_dir = (wxDirName)Path::Combine( L".config", pxGetAppName() );
-        #endif
+		wxDirName default_config_dir = (wxDirName)Path::Combine( L".marley", pxGetAppName() );
 		wxString xdg_home_value;
 		if( wxGetEnv(L"XDG_CONFIG_HOME", &xdg_home_value) ) {
 			if ( xdg_home_value.IsEmpty() ) {
@@ -451,7 +507,7 @@ public:
 				user_local_dir = (wxDirName)Path::Combine( xdg_home_value, pxGetAppName());
 			}
 		} else {
-			// variable does not exist
+			// variable do not exist
 			user_local_dir = (wxDirName)Path::Combine( GetUserConfigDir() , default_config_dir);
 		}
 
@@ -539,12 +595,6 @@ void DoFmvSwitch(bool on)
 			if (GSPanel* viewport = gsFrame->GetViewport())
 				viewport->DoResize();
 	}
-
-	if (EmuConfig.Gamefixes.FMVinSoftwareHack) {
-		ScopedCoreThreadPause paused_core(new SysExecEvent_SaveSinglePlugin(PluginId_GS));
-		renderswitch = !renderswitch;
-		paused_core.AllowResume();
-	}
 }
 
 void Pcsx2App::LogicalVsync()
@@ -557,7 +607,7 @@ void Pcsx2App::LogicalVsync()
 
 	FpsManager.DoFrame();
 
-	if (EmuConfig.Gamefixes.FMVinSoftwareHack || g_Conf->GSWindow.FMVAspectRatioSwitch != FMV_AspectRatio_Switch_Off) {
+	if (g_Conf->GSWindow.FMVAspectRatioSwitch != FMV_AspectRatio_Switch_Off) {
 		if (EnableFMV) {
 			DevCon.Warning("FMV on");
 			DoFmvSwitch(true);
@@ -625,21 +675,20 @@ void Pcsx2App::HandleEvent(wxEvtHandler* handler, wxEventFunction func, wxEvent&
 #ifndef DISABLE_RECORDING
 		if (g_Conf->EmuOptions.EnableRecordingTools)
 		{
-			if (g_RecordingControls.HasRecordingStopped())
+			if (g_InputRecordingControls.IsPaused())
 			{
-				// While stopping, GSFrame key event also stops, so get key input from here
-				// Along with that, you can not use the shortcut keys set in GSFrame
-				if (PADkeyEvent != NULL)
+				// When the GSFrame CoreThread is paused, so is the logical VSync
+				// Meaning that we have to grab the user-input through here to potentially
+				// resume emulation.
+				if (const keyEvent* ev = PADkeyEvent() )
 				{
-					// Acquire key information, possibly calling it only once per frame
-					const keyEvent* ev = PADkeyEvent();
-					if (ev != NULL)
+					if( ev->key != 0 )
 					{
-						sApp.Recording_PadKeyDispatch(*ev);
+						PadKeyDispatch( *ev );
 					}
 				}
 			}
-			g_RecordingControls.ResumeCoreThreadIfStarted();
+			g_InputRecordingControls.ResumeCoreThreadIfStarted();
 		}
 #endif
 		(handler->*func)(event);
@@ -942,6 +991,9 @@ SysMainMemory& Pcsx2App::GetVmReserve()
 	return *m_VmReserve;
 }
 
+
+extern Display* XDisplay;	
+extern Window Xwindow;
 void Pcsx2App::OpenGsPanel()
 {
 	if( AppRpc_TryInvoke( &Pcsx2App::OpenGsPanel ) ) return;
@@ -1025,6 +1077,13 @@ void Pcsx2App::OpenGsPanel()
 #endif
 
 	gsFrame->ShowFullScreen( g_Conf->GSWindow.IsFullscreen );
+
+#ifndef DISABLE_RECORDING
+	// Disable recording controls that only make sense if the game is running
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_FrameAdvance, true);
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_TogglePause, true);
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_ToggleRecordingMode, g_InputRecording.IsActive());
+#endif
 }
 
 void Pcsx2App::CloseGsPanel()
@@ -1037,6 +1096,12 @@ void Pcsx2App::CloseGsPanel()
 		if (GSPanel* woot = gsFrame->GetViewport())
 			woot->Destroy();
 	}
+#ifndef DISABLE_RECORDING
+	// Disable recording controls that only make sense if the game is running
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_FrameAdvance, false);
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_TogglePause, false);
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_ToggleRecordingMode, false);
+#endif
 }
 
 void Pcsx2App::OnGsFrameClosed( wxWindowID id )
@@ -1065,7 +1130,7 @@ void Pcsx2App::OnProgramLogClosed( wxWindowID id )
 void Pcsx2App::OnMainFrameClosed( wxWindowID id )
 {
 #ifndef DISABLE_RECORDING
-	if (g_Conf->EmuOptions.EnableRecordingTools)
+	if (g_InputRecording.IsActive())
 	{
 		g_InputRecording.Stop();
 	}
@@ -1158,6 +1223,9 @@ void Pcsx2App::SysExecute()
 void Pcsx2App::SysExecute( CDVD_SourceType cdvdsrc, const wxString& elf_override )
 {
 	SysExecutorThread.PostEvent( new SysExecEvent_Execute(cdvdsrc, elf_override) );
+#ifndef DISABLE_RECORDING
+	g_InputRecording.RecordingReset();
+#endif
 }
 
 // Returns true if there is a "valid" virtual machine state from the user's perspective.  This
@@ -1183,7 +1251,19 @@ void SysStatus( const wxString& text )
 void SysUpdateIsoSrcFile( const wxString& newIsoFile )
 {
 	g_Conf->CurrentIso = newIsoFile;
-	sMainFrame.UpdateIsoSrcSelection();
+	sMainFrame.UpdateStatusBar();
+	sMainFrame.UpdateCdvdSrcSelection();
+}
+
+void SysUpdateDiscSrcDrive( const wxString& newDiscDrive )
+{
+#if defined(_WIN32)
+	g_Conf->Folders.RunDisc = wxFileName::DirName(newDiscDrive);
+#else
+	g_Conf->Folders.RunDisc = wxFileName(newDiscDrive);
+#endif
+	AppSaveSettings();
+	sMainFrame.UpdateCdvdSrcSelection();
 }
 
 bool HasMainFrame()

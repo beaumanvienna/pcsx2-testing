@@ -27,14 +27,15 @@
 #include "Debugger/DisassemblyDialog.h"
 
 #ifndef DISABLE_RECORDING
-#	include "Recording/VirtualPad.h"
+#   include "Recording/InputRecording.h"
+#	include "Recording/VirtualPad/VirtualPad.h"
 #endif
 
 #include <wx/cmdline.h>
 #include <wx/intl.h>
 #include <wx/stdpaths.h>
 #include <memory>
-
+#include <SDL.h>
 using namespace pxSizerFlags;
 
 void Pcsx2App::DetectCpuAndUserMode()
@@ -77,10 +78,12 @@ void Pcsx2App::OpenMainFrame()
 	m_id_Disassembler = disassembly->GetId();
 
 #ifndef DISABLE_RECORDING
-	VirtualPad* virtualPad0 = new VirtualPad(mainFrame, wxID_ANY, wxEmptyString, 0);
+	VirtualPad* virtualPad0 = new VirtualPad(mainFrame, 0, g_Conf->inputRecording);
+	g_InputRecording.setVirtualPadPtr(virtualPad0, 0);
 	m_id_VirtualPad[0] = virtualPad0->GetId();
-	
-	VirtualPad *virtualPad1 = new VirtualPad(mainFrame, wxID_ANY, wxEmptyString, 1);
+
+	VirtualPad* virtualPad1 = new VirtualPad(mainFrame, 1, g_Conf->inputRecording);
+	g_InputRecording.setVirtualPadPtr(virtualPad1, 1);
 	m_id_VirtualPad[1] = virtualPad1->GetId();
 
 	NewRecordingFrame* newRecordingFrame = new NewRecordingFrame(mainFrame);
@@ -184,39 +187,15 @@ void Pcsx2App::AllocateCoreStuffs()
 			{
 				scrollableTextArea->AppendText( L"* microVU0\n\t" + ex->FormatDisplayMessage() + L"\n\n" );
 				recOps.UseMicroVU0	= false;
-#ifndef DISABLE_SVU
-				recOps.EnableVU0	= recOps.EnableVU0 && m_CpuProviders->IsRecAvailable_SuperVU0();
-#else
 				recOps.EnableVU0	= false;
-#endif
 			}
 
 			if( BaseException* ex = m_CpuProviders->GetException_MicroVU1() )
 			{
 				scrollableTextArea->AppendText( L"* microVU1\n\t" + ex->FormatDisplayMessage() + L"\n\n" );
 				recOps.UseMicroVU1	= false;
-#ifndef DISABLE_SVU
-				recOps.EnableVU1	= recOps.EnableVU1 && m_CpuProviders->IsRecAvailable_SuperVU1();
-#else
 				recOps.EnableVU1	= false;
-#endif
 			}
-
-#ifndef DISABLE_SVU
-			if( BaseException* ex = m_CpuProviders->GetException_SuperVU0() )
-			{
-				scrollableTextArea->AppendText( L"* SuperVU0\n\t" + ex->FormatDisplayMessage() + L"\n\n" );
-				recOps.UseMicroVU0	= m_CpuProviders->IsRecAvailable_MicroVU0();
-				recOps.EnableVU0	= recOps.EnableVU0 && recOps.UseMicroVU0;
-			}
-
-			if( BaseException* ex = m_CpuProviders->GetException_SuperVU1() )
-			{
-				scrollableTextArea->AppendText( L"* SuperVU1\n\t" + ex->FormatDisplayMessage() + L"\n\n" );
-				recOps.UseMicroVU1	= m_CpuProviders->IsRecAvailable_MicroVU1();
-				recOps.EnableVU1	= recOps.EnableVU1 && recOps.UseMicroVU1;
-			}
-#endif
 
 			exconf += exconf.Heading(pxE( L"Note: Recompilers are not necessary for PCSX2 to run, however they typically improve emulation speed substantially. You may have to manually re-enable the recompilers listed above, if you resolve the errors." ));
 
@@ -253,7 +232,7 @@ void Pcsx2App::OnInitCmdLine( wxCmdLineParser& parser )
 	parser.AddOption( wxEmptyString,L"elf",			_("executes an ELF image"), wxCMD_LINE_VAL_STRING );
 	parser.AddOption( wxEmptyString,L"irx",			_("executes an IRX image"), wxCMD_LINE_VAL_STRING );
 	parser.AddSwitch( wxEmptyString,L"nodisc",		_("boots an empty DVD tray; use to enter the PS2 system menu") );
-	parser.AddSwitch( wxEmptyString,L"usecd",		_("boots from the CDVD plugin (overrides IsoFile parameter)") );
+	parser.AddSwitch( wxEmptyString,L"usecd",		_("boots from the disc drive (overrides IsoFile parameter)") );
 
 	parser.AddSwitch( wxEmptyString,L"nohacks",		_("disables all speedhacks") );
 	parser.AddOption( wxEmptyString,L"gamefixes",	_("use the specified comma or pipe-delimited list of gamefixes.") + fixlist, wxCMD_LINE_VAL_STRING );
@@ -267,11 +246,11 @@ void Pcsx2App::OnInitCmdLine( wxCmdLineParser& parser )
 
 	parser.AddSwitch( wxEmptyString,L"profiling",	_("update options to ease profiling (debug)") );
 
-	const PluginInfo* pi = tbl_PluginInfo; do {
+	ForPlugins([&] (const PluginInfo * pi) {
 		parser.AddOption( wxEmptyString, pi->GetShortname().Lower(),
 			pxsFmt( _("specify the file to use as the %s plugin"), WX_STR(pi->GetShortname()) )
 		);
-	} while( ++pi, pi->shortname != NULL );
+	});
 
 	parser.SetSwitchChars( L"-" );
 }
@@ -285,6 +264,7 @@ bool Pcsx2App::OnCmdLineError( wxCmdLineParser& parser )
 bool Pcsx2App::ParseOverrides( wxCmdLineParser& parser )
 {
 	wxString dest;
+	bool parsed = true;
 
 	if (parser.Found( L"cfgpath", &dest ) && !dest.IsEmpty())
 	{
@@ -311,34 +291,33 @@ bool Pcsx2App::ParseOverrides( wxCmdLineParser& parser )
 	if (parser.Found(L"fullscreen"))	Overrides.GsWindowMode = GsWinMode_Fullscreen;
 	if (parser.Found(L"windowed"))		Overrides.GsWindowMode = GsWinMode_Windowed;
 
-	const PluginInfo* pi = tbl_PluginInfo; do
-	{
-		if( !parser.Found( pi->GetShortname().Lower(), &dest ) ) continue;
-
-		if( wxFileExists( dest ) )
-			Console.Warning( pi->GetShortname() + L" override: " + dest );
-		else
+	ForPlugins([&] (const PluginInfo * pi) {
+		if (parser.Found( pi->GetShortname().Lower(), &dest))
 		{
-			wxDialogWithHelpers okcan( NULL, AddAppName(_("Plugin Override Error - %s")) );
+			if( wxFileExists( dest ) )
+				Console.Warning( pi->GetShortname() + L" override: " + dest );
+			else
+			{
+				wxDialogWithHelpers okcan( NULL, AddAppName(_("Plugin Override Error - %s")) );
 
-			okcan += okcan.Heading( wxsFormat(
-				_("%s Plugin Override Error!  The following file does not exist or is not a valid %s plugin:\n\n"),
-				pi->GetShortname().c_str(), pi->GetShortname().c_str()
-			) );
+				okcan += okcan.Heading( wxsFormat(
+					_("%s Plugin Override Error!  The following file does not exist or is not a valid %s plugin:\n\n"),
+					pi->GetShortname().c_str(), pi->GetShortname().c_str()
+				) );
 
-			okcan += okcan.GetCharHeight();
-			okcan += okcan.Text(dest);
-			okcan += okcan.GetCharHeight();
-			okcan += okcan.Heading(AddAppName(_("Press OK to use the default configured plugin, or Cancel to close %s.")));
+				okcan += okcan.GetCharHeight();
+				okcan += okcan.Text(dest);
+				okcan += okcan.GetCharHeight();
+				okcan += okcan.Heading(AddAppName(_("Press OK to use the default configured plugin, or Cancel to close %s.")));
 
-			if( wxID_CANCEL == pxIssueConfirmation( okcan, MsgButtons().OKCancel() ) ) return false;
+				if( wxID_CANCEL == pxIssueConfirmation( okcan, MsgButtons().OKCancel() ) ) parsed = false;
+			}
+
+			if (parsed) Overrides.Filenames.Plugins[pi->id] = dest;
 		}
-		
-		Overrides.Filenames.Plugins[pi->id] = dest;
+	});
 
-	} while( ++pi, pi->shortname != NULL );
-	
-	return true;
+	return parsed;
 }
 
 bool Pcsx2App::OnCmdLineParsed( wxCmdLineParser& parser )
@@ -387,7 +366,7 @@ bool Pcsx2App::OnCmdLineParsed( wxCmdLineParser& parser )
 
 	if( parser.Found(L"usecd") )
 	{
-		Startup.CdvdSource	= CDVD_SourceType::Plugin;
+		Startup.CdvdSource	= CDVD_SourceType::Disc;
 		Startup.SysAutoRun	= true;
 	}
 
@@ -447,8 +426,7 @@ protected:
 bool Pcsx2App::OnInit()
 {
 	EnableAllLogging();
-	Console.WriteLn("Interface is initializing.  Entering Pcsx2App::OnInit!");
-
+    
 	InitCPUTicks();
 
 	pxDoAssert		= AppDoAssert;
@@ -490,9 +468,6 @@ bool Pcsx2App::OnInit()
 		InitDefaultGlobalAccelerators();
 		delete wxLog::SetActiveTarget( new pxLogConsole() );
 
-#ifdef __WXMSW__
-		pxDwm_Load();
-#endif
 		SysExecutorThread.Start();
 		DetectCpuAndUserMode();
 
@@ -656,10 +631,6 @@ void Pcsx2App::CleanupOnExit()
 		Console.Indent().Error( ex.FormatDiagnosticMessage() );
 	}
 
-#ifdef __WXMSW__
-	pxDwm_Unload();
-#endif
-	
 	// Notice: deleting the plugin manager (unloading plugins) here causes Lilypad to crash,
 	// likely due to some pending message in the queue that references lilypad procs.
 	// We don't need to unload plugins anyway tho -- shutdown is plenty safe enough for

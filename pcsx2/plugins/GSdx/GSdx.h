@@ -61,7 +61,7 @@ public:
 	std::string GetConfigS(const char* entry);
 
 	void SetCurrentRendererType(GSRendererType type);
-	GSRendererType GetCurrentRendererType();
+	GSRendererType GetCurrentRendererType() const;
 
 	void SetConfigDir(const char* dir);
 
@@ -70,6 +70,7 @@ public:
 	std::vector<GSSetting> m_gs_aspectratio;
 	std::vector<GSSetting> m_gs_upscale_multiplier;
 	std::vector<GSSetting> m_gs_max_anisotropy;
+	std::vector<GSSetting> m_gs_dithering;
 	std::vector<GSSetting> m_gs_bifilter;
 	std::vector<GSSetting> m_gs_trifilter;
 	std::vector<GSSetting> m_gs_hack;
@@ -81,12 +82,6 @@ public:
 	std::vector<GSSetting> m_gs_acc_blend_level;
 	std::vector<GSSetting> m_gs_acc_blend_level_d3d11;
 	std::vector<GSSetting> m_gs_tv_shaders;
-
-	std::vector<GSSetting> m_gpu_renderers;
-	std::vector<GSSetting> m_gpu_filter;
-	std::vector<GSSetting> m_gpu_dithering;
-	std::vector<GSSetting> m_gpu_aspectratio;
-	std::vector<GSSetting> m_gpu_scale;
 };
 
 struct GSDXError {};

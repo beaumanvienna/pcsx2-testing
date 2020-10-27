@@ -49,6 +49,7 @@ GSRenderer::GSRenderer()
 	m_fxaa        = theApp.GetConfigB("fxaa");
 	m_shaderfx    = theApp.GetConfigB("shaderfx");
 	m_shadeboost  = theApp.GetConfigB("ShadeBoost");
+	m_dithering   = theApp.GetConfigI("dithering_ps2"); // 0 off, 1 auto, 2 auto no scale
 }
 
 GSRenderer::~GSRenderer()
@@ -461,7 +462,7 @@ void GSRenderer::VSync(int field)
 
 		if(GSTexture* t = m_dev->GetCurrent())
 		{
-			t->Save(m_snapshot + ".bmp");
+			t->Save(m_snapshot + ".png");
 		}
 
 		m_snapshot.clear();
@@ -499,36 +500,40 @@ void GSRenderer::VSync(int field)
 
 bool GSRenderer::MakeSnapshot(const std::string& path)
 {
-	if(m_snapshot.empty())
+	if (m_snapshot.empty())
 	{
-		time_t cur_time = time(nullptr);
-		static time_t prev_snap;
-		// The variable 'n' is used for labelling the screenshots when multiple screenshots are taken in
-		// a single second, we'll start using this variable for naming when a second screenshot request is detected
-		// at the same time as the first one. Hence, we're initially setting this counter to 2 to imply that
-		// the captured image is the 2nd image captured at this specific time.
-		static int n = 2;
-		char local_time[16];
-
-		if (strftime(local_time, sizeof(local_time), "%Y%m%d%H%M%S", localtime(&cur_time)))
+		// Allows for providing a complete path
+		if (path.substr(path.size() - 4, 4) == ".png")
+			m_snapshot = path.substr(0, path.size() - 4);
+		else
 		{
-			if (cur_time == prev_snap)
+			time_t cur_time = time(nullptr);
+			static time_t prev_snap;
+			// The variable 'n' is used for labelling the screenshots when multiple screenshots are taken in
+			// a single second, we'll start using this variable for naming when a second screenshot request is detected
+			// at the same time as the first one. Hence, we're initially setting this counter to 2 to imply that
+			// the captured image is the 2nd image captured at this specific time.
+			static int n = 2;
+			char local_time[16];
+
+			if (strftime(local_time, sizeof(local_time), "%Y%m%d%H%M%S", localtime(&cur_time)))
 			{
-				m_snapshot = format("%s_%s_(%d)", path.c_str(), local_time, n++);
+				if (cur_time == prev_snap)
+					m_snapshot = format("%s_%s_(%d)", path.c_str(), local_time, n++);
+				else
+				{
+					n = 2;
+					m_snapshot = format("%s_%s", path.c_str(), local_time);
+				}
+				prev_snap = cur_time;
 			}
-			else
-			{
-				n = 2;
-				m_snapshot = format("%s_%s", path.c_str(), local_time);
-			}
-			prev_snap = cur_time;
 		}
 	}
 
 	return true;
 }
 
-bool GSRenderer::BeginCapture()
+std::wstring* GSRenderer::BeginCapture()
 {
 	GSVector4i disp = m_wnd->GetClientRect().fit(m_aspectratio);
 	float aspect = (float)disp.width() / std::max(1, disp.height());
@@ -566,18 +571,19 @@ void GSRenderer::KeyEvent(GSKeyEventData* e)
 		int step = m_shift_key ? -1 : 1;
 
 #if defined(__unix__)
-#define VK_F5 XK_F5
+#define VK_F1 XK_F1
 #define VK_F6 XK_F6
-#define VK_F7 XK_F7
+#define VK_F3 XK_F3
 #define VK_DELETE XK_Delete
 #define VK_INSERT XK_Insert
 #define VK_PRIOR XK_Prior
+#define VK_NEXT XK_Next
 #define VK_HOME XK_Home
 #endif
 
 		switch(e->key)
 		{
-		case VK_F5:
+		case VK_F1:
 			m_interlace = (m_interlace + s_interlace_nb + step) % s_interlace_nb;
 			theApp.SetConfig("interlace", m_interlace);
 			printf("GSdx: Set deinterlace mode to %d (%s).\n", m_interlace, theApp.m_gs_interlace.at(m_interlace).name.c_str());
@@ -586,7 +592,7 @@ void GSRenderer::KeyEvent(GSKeyEventData* e)
 			if( m_wnd->IsManaged() )
 				m_aspectratio = (m_aspectratio + s_aspect_ratio_nb + step) % s_aspect_ratio_nb;
 			return;
-		case VK_F7:
+		case VK_F3:
 			m_shader = (m_shader + s_post_shader_nb + step) % s_post_shader_nb;
 			theApp.SetConfig("TVShader", m_shader);
 			printf("GSdx: Set shader to: %d.\n", m_shader);
@@ -610,6 +616,11 @@ void GSRenderer::KeyEvent(GSKeyEventData* e)
 			m_shaderfx = !m_shaderfx;
 			theApp.SetConfig("shaderfx", m_shaderfx);
 			printf("GSdx: External post-processing is now %s.\n", m_shaderfx ? "enabled" : "disabled");
+			return;
+		case VK_NEXT: // As requested by Prafull, to be removed later
+			char dither_msg[3][16] = {"disabled", "auto", "auto unscaled"};
+			m_dithering = (m_dithering+1)%3;
+			printf("GSdx: Dithering is now %s.\n", dither_msg[m_dithering]);
 			return;
 		}
 

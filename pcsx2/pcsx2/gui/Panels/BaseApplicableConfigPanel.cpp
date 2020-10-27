@@ -57,7 +57,6 @@ void ApplyStateStruct::StartWizard()
 //
 bool ApplyStateStruct::ApplyPage( int pageid )
 {
-    printf("jc bool ApplyStateStruct::ApplyPage( int pageid ) \n");
 	bool retval = true;
 
 	// Save these settings so we can restore them if the Apply fails.
@@ -94,7 +93,6 @@ bool ApplyStateStruct::ApplyPage( int pageid )
 	}
 	catch( Exception::CannotApplySettings& ex )
 	{
-        printf("jc bool catch( Exception::CannotApplySettings& ex ) \n");
 		DocsFolderMode = oldDocsMode;
 		SettingsFolder = oldSettingsFolder;
 		UseDefaultSettingsFolder = oldUseDefSet;
