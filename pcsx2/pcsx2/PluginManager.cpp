@@ -165,10 +165,8 @@ _GSreadFIFO        GSreadFIFO;
 _GSreadFIFO2       GSreadFIFO2;
 _GSinitReadFIFO    GSinitReadFIFO;
 _GSinitReadFIFO2   GSinitReadFIFO2;
-_GSchangeSaveState GSchangeSaveState;
 _GSgetTitleInfo2   GSgetTitleInfo2;
 _GSmakeSnapshot	   GSmakeSnapshot;
-_GSmakeSnapshot2   GSmakeSnapshot2;
 _GSirqCallback 	   GSirqCallback;
 _GSsetBaseMem		GSsetBaseMem;
 _GSsetGameCRC		GSsetGameCRC;
@@ -360,7 +358,6 @@ static const LegacyApi_ReqMethod s_MethMessReq_GS[] =
 	{	"GSsetFrameSkip",	(vMeth**)&GSsetFrameSkip,	(vMeth*)GS_setFrameSkip	},
 	{	"GSsetVsync",		(vMeth**)&GSsetVsync,		(vMeth*)GS_setVsync	},
 	{	"GSsetExclusive",	(vMeth**)&GSsetExclusive,	(vMeth*)GS_setExclusive	},
-	{	"GSchangeSaveState",(vMeth**)&GSchangeSaveState,(vMeth*)GS_changeSaveState },
 	{	"GSgetTitleInfo2",	(vMeth**)&GSgetTitleInfo2,	(vMeth*)GS_getTitleInfo2 },
 	{ NULL }
 };
@@ -372,7 +369,6 @@ static const LegacyApi_OptMethod s_MethMessOpt_GS[] =
 	{	"GSopen2",			(vMeth**)&GSopen2			},
 	{	"GSreset",			(vMeth**)&GSreset			},
 	{	"GSsetupRecording",	(vMeth**)&GSsetupRecording	},
-	{	"GSmakeSnapshot2",	(vMeth**)&GSmakeSnapshot2	},
 	{	"GSgifSoftReset",	(vMeth**)&GSgifSoftReset	},
 	{	"GSreadFIFO",		(vMeth**)&GSreadFIFO		},
 	{	"GSinitReadFIFO",	(vMeth**)&GSinitReadFIFO	},

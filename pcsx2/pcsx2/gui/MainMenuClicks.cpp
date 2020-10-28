@@ -916,7 +916,10 @@ void MainEmuFrame::Menu_Capture_Screenshot_Screenshot_Click(wxCommandEvent& even
 	{
 		return;
 	}
-	GSmakeSnapshot(g_Conf->Folders.Snapshots.ToAscii());
+	char str[1024];
+	wxString mystring = g_Conf->Folders.Snapshots.ToAscii();
+	strcpy(str, mystring.mb_str()); 
+	GSmakeSnapshot(str);
 }
 
 void MainEmuFrame::Menu_Capture_Screenshot_Screenshot_As_Click(wxCommandEvent &event)
@@ -932,7 +935,12 @@ void MainEmuFrame::Menu_Capture_Screenshot_Screenshot_As_Click(wxCommandEvent &e
 	wxFileDialog fileDialog(this, _("Select a file"), g_Conf->Folders.Snapshots.ToAscii(), wxEmptyString, "PNG files (*.png)|*.png", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 	if (fileDialog.ShowModal() == wxID_OK)
-		GSmakeSnapshot(fileDialog.GetPath());
+	{
+		char str[1024];
+		wxString mystring = fileDialog.GetPath();
+		strcpy(str, mystring.mb_str()); 
+		GSmakeSnapshot(str);
+	}
 
 	// Resume emulation
 	if (!wasPaused)

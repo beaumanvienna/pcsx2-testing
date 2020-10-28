@@ -147,9 +147,14 @@ extern "C" {
 #if defined(GSdefs) || defined(BUILTIN_GS_PLUGIN)
 
 // basic funcs
-
+typedef unsigned int uint32;
 s32 CALLBACK GSinit();
 s32 CALLBACK GSopen(void *pDsp, const char *Title, int multithread);
+int CALLBACK GSopen2(void** dsp, uint32 flags);
+void CALLBACK GSsetVsync(int vsync);
+void CALLBACK GSosdMonitor(const char *key, const char *value, uint32 color);
+void CALLBACK GSsetExclusive(int enabled);
+void CALLBACK GSosdLog(const char *utf8, uint32 color);
 void CALLBACK GSclose();
 void CALLBACK GSshutdown();
 void CALLBACK GSsetSettingsDir(const char *dir);
@@ -184,7 +189,7 @@ void CALLBACK GSsetFrameSkip(int frameskip);
 // if start is 1, starts recording spu2 data, else stops
 // returns a non zero value if successful
 // for now, pData is not used
-int CALLBACK GSsetupRecording(int start, void *pData);
+std::wstring* CALLBACK GSsetupRecording(int start);
 
 void CALLBACK GSreset();
 //deprecated: GSgetTitleInfo was used in PCSX2 but no plugin supported it prior to r4070:

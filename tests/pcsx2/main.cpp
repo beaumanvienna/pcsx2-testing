@@ -570,51 +570,44 @@ int main(int argc, char* argv[])
     n = str.length(); 
     strcpy(arg1, str.c_str()); 
 
-	str = "--gs=";
-	str += gBaseDir;
-	str += "PCSX2/libGSdx.so"; //ok
-	n = str.length(); 
-	strcpy(arg2, str.c_str()); 
-
 	str = "--usb=";
 	str += gBaseDir;
 	str += "PCSX2/libUSBnull-0.7.0.so";  //ok
 	n = str.length(); 
-	strcpy(arg3, str.c_str()); 
+	strcpy(arg2, str.c_str()); 
 
 	str = "--dev9=";
 	str += gBaseDir;
 	str += "PCSX2/libdev9null-0.5.0.so"; //ok
 	n = str.length(); 
-	strcpy(arg4, str.c_str()); 
+	strcpy(arg3, str.c_str()); 
     
     str = "--nogui";
     n = str.length(); 
-    strcpy(arg5, str.c_str()); 
-    
+    strcpy(arg4, str.c_str()); 
+
     str = "--fullboot";
     n = str.length(); 
-    strcpy(arg6, str.c_str()); 
+    strcpy(arg5, str.c_str()); 
 
     pcsx2_argv[0] = arg1;
     pcsx2_argv[1] = arg2;
     pcsx2_argv[2] = arg3;
     pcsx2_argv[3] = arg4;
     pcsx2_argv[4] = arg5;
-    pcsx2_argv[5] = arg6;
 
     if (argc > 1)
     {
         str = argv[1];
         n = str.length(); 
-        strcpy(arg7, str.c_str());
+        strcpy(arg6, str.c_str());
 
-        pcsx2_argv[6] = arg7;
-        pcsx2_argc = 7;
+        pcsx2_argv[5] = arg6;
+        pcsx2_argc = 6;
     }
     else
     {
-        pcsx2_argc = 4; // only plugins, no other options
+        pcsx2_argc = 3; // only plugins, no other options
     }
 
     SDL_SysWMinfo sdlWindowInfo;
