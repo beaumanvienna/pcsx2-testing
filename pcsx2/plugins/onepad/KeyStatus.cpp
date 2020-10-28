@@ -48,7 +48,8 @@ void KeyStatus::Init()
         m_internal_analog_joy[pad].ry = m_analog_released_val;
     }
 }
-
+void shutdownExternal();
+bool requestShutdown = false;
 void KeyStatus::press(u32 pad, u32 index, s32 value)
 {
     if (!IsAnalogKey(index)) {
@@ -57,6 +58,12 @@ void KeyStatus::press(u32 pad, u32 index, s32 value)
             clear_bit(m_internal_button_kbd[pad], index);
         else
             clear_bit(m_internal_button_joy[pad], index);
+            
+        if (index == PAD_GUIDE)
+        {
+            requestShutdown = true;
+        }
+            
     } else {
         // clamp value
         if (value > MAX_ANALOG_VALUE)
@@ -86,6 +93,10 @@ void KeyStatus::release(u32 pad, u32 index)
             set_bit(m_internal_button_joy[pad], index);
     } else {
         analog_set(pad, index, m_analog_released_val);
+    }
+    if ((index == PAD_GUIDE) && requestShutdown)
+    {
+        shutdownExternal();
     }
 }
 

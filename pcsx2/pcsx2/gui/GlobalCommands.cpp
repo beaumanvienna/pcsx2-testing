@@ -648,6 +648,16 @@ namespace Implementations
 #endif
 } // namespace Implementations
 
+
+void shutdownExternal()
+{
+    if (CoreThread.HasPendingStateChangeRequest())
+        return;
+
+    Implementations::Sys_Suspend();
+
+}
+
 // --------------------------------------------------------------------------------------
 //  CommandDeclarations table
 // --------------------------------------------------------------------------------------
