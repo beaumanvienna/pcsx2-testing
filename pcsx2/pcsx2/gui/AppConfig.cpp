@@ -830,9 +830,11 @@ AppConfig::GSWindowOptions::GSWindowOptions()
 	StretchY				= 100;
 	OffsetX					= 0;
 	OffsetY					= 0;
-
-	WindowSize				= wxSize( 640, 480 );
-	WindowPos				= wxDefaultPosition;
+	int w,h;
+	SDL_GetWindowSize(gWindow,&w,&h);
+	WindowSize				= wxSize( w, h );
+	SDL_GetWindowPosition(gWindow,&w,&h);
+	WindowPos				= wxPoint( w, h );
 	IsMaximized				= false;
 	IsFullscreen			= false;
 	EnableVsyncWindowFlag	= false;

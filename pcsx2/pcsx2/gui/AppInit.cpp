@@ -65,6 +65,40 @@ void Pcsx2App::DetectCpuAndUserMode()
 	UnloadPlugins();
 }
 
+#define NO_WX_EVENT_HANDLING 0
+#define WX_EVENT_HANDLING -1
+
+int Pcsx2App::FilterEvent(wxEvent &event)
+{
+    int retVal = WX_EVENT_HANDLING;
+    
+    int event_type = event.GetEventType();
+
+    switch(event.GetEventCategory())
+    {
+        case wxEVT_CATEGORY_UI:        
+
+            break;
+        case wxEVT_CATEGORY_USER_INPUT:
+            
+            break;
+        case wxEVT_CATEGORY_SOCKET:
+            
+            break;
+        case wxEVT_CATEGORY_TIMER:
+            
+            break;
+        case wxEVT_CATEGORY_THREAD:
+            
+            break;
+        default:
+            
+            break;
+    }
+    
+    return retVal;
+}
+
 void Pcsx2App::OpenMainFrame()
 {
 	if( AppRpc_TryInvokeAsync( &Pcsx2App::OpenMainFrame ) ) return;
@@ -497,7 +531,7 @@ bool Pcsx2App::OnInit()
 
 		if( Startup.SysAutoRun )
 		{
-			g_Conf->EmuOptions.UseBOOT2Injection = !Startup.NoFastBoot;
+			g_Conf->EmuOptions.UseBOOT2Injection = false; // texts in TR do not load with fast boot
 			g_Conf->CdvdSource = Startup.CdvdSource;
 			if (Startup.CdvdSource == CDVD_SourceType::Iso)
 				SysUpdateIsoSrcFile( Startup.IsoFile );

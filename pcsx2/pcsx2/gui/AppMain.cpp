@@ -120,7 +120,7 @@ int pcsx2_main(int argc_local, char* argv_local[])
     delete wxTheApp;
 
     if (g_Conf) g_Conf.reset();
-    //requestShutdown = false;
+    requestShutdown = false;
     
     return 0;
 }
@@ -628,7 +628,7 @@ void Pcsx2App::LogicalVsync()
 
 	// Only call PADupdate here if we're using GSopen2.  Legacy GSopen plugins have the
 	// GS window belonging to the MTGS thread.
-	if( (PADupdate != NULL) && (GSopen2 != NULL) && (wxGetApp().GetGsFramePtr() != NULL) )
+	if( (PADupdate != NULL) && (GSopen2 != NULL) )
 		PADupdate(0);
 
 	while( const keyEvent* ev = PADkeyEvent() )
@@ -996,94 +996,8 @@ extern Display* XDisplay;
 extern Window Xwindow;
 void Pcsx2App::OpenGsPanel()
 {
-	if( AppRpc_TryInvoke( &Pcsx2App::OpenGsPanel ) ) return;
-
-	GSFrame* gsFrame = GetGsFramePtr();
-	if( gsFrame == NULL )
-	{
-		gsFrame = new GSFrame(GetAppName() );
-		m_id_GsFrame = gsFrame->GetId();
-
-		switch( wxGetApp().Overrides.GsWindowMode )
-		{
-			case GsWinMode_Windowed:
-				g_Conf->GSWindow.IsFullscreen = false;
-			break;
-
-			case GsWinMode_Fullscreen:
-				g_Conf->GSWindow.IsFullscreen = true;
-			break;
-
-			case GsWinMode_Unspecified:
-				g_Conf->GSWindow.IsFullscreen = g_Conf->GSWindow.DefaultToFullscreen;
-			break;
-		}
-	}
-	else
-	{
-		// This is an attempt to hackfix a bug in nvidia's 195.xx drivers: When using
-		// Aero and DX10, the driver fails to update the window after the device has changed,
-		// until some event like a hide/show or resize event is posted to the window.
-		// Presumably this forces the driver to re-cache the visibility info.
-		// Notes:
-		//   Doing an immediate hide/show didn't work.  So now I'm trying a resize.  Because
-		//   wxWidgets is "clever" (grr!) it optimizes out just force-setting the same size
-		//   over again, so instead I resize it to size-1 and then back to the original size.
-		//
-		// FIXME: Gsdx memory leaks in DX10 have been fixed.  This code may not be needed
-		// anymore.
-		
-		const wxSize oldsize( gsFrame->GetSize() );
-		wxSize newsize( oldsize );
-		newsize.DecBy(1);
-
-		gsFrame->SetSize( newsize );
-		gsFrame->SetSize( oldsize );
-	}
-	
-	pxAssertDev( !GetCorePlugins().IsOpen( PluginId_GS ), "GS Plugin must be closed prior to opening a new Gs Panel!" );
-
-#ifdef __WXGTK__
-	// The x window/display are actually very deeper in the widget. You need both display and window
-	// because unlike window there are unrelated. One could think it would be easier to send directly the GdkWindow.
-	// Unfortunately there is a race condition between gui and gs threads when you called the
-	// GDK_WINDOW_* macro. To be safe I think it is best to do here. It only cost a slight
-	// extension (fully compatible) of the plugins API. -- Gregory
-
-	// GTK_PIZZA is an internal interface of wx, therefore they decide to
-	// remove it on wx 3. I tryed to replace it with gtk_widget_get_window but
-	// unfortunately it creates a gray box in the middle of the window on some
-	// users.
-
-	GtkWidget *child_window = GTK_WIDGET(gsFrame->GetViewport()->GetHandle());
-
-	gtk_widget_realize(child_window); // create the widget to allow to use GDK_WINDOW_* macro
-	gtk_widget_set_double_buffered(child_window, false); // Disable the widget double buffer, you will use the opengl one
-
-	GdkWindow* draw_window = gtk_widget_get_window(child_window);
-
-#if GTK_MAJOR_VERSION < 3
-	Window Xwindow = GDK_WINDOW_XWINDOW(draw_window);
-#else
-	Window Xwindow = GDK_WINDOW_XID(draw_window);
-#endif
-	Display* XDisplay = GDK_WINDOW_XDISPLAY(draw_window);
-
-	pDsp[0] = (uptr)XDisplay;
+	pDsp[0] = (uptr)XDisplay;	
 	pDsp[1] = (uptr)Xwindow;
-#else
-	pDsp[0] = (uptr)gsFrame->GetViewport()->GetHandle();
-	pDsp[1] = NULL;
-#endif
-
-	gsFrame->ShowFullScreen( g_Conf->GSWindow.IsFullscreen );
-
-#ifndef DISABLE_RECORDING
-	// Disable recording controls that only make sense if the game is running
-	sMainFrame.enableRecordingMenuItem(MenuId_Recording_FrameAdvance, true);
-	sMainFrame.enableRecordingMenuItem(MenuId_Recording_TogglePause, true);
-	sMainFrame.enableRecordingMenuItem(MenuId_Recording_ToggleRecordingMode, g_InputRecording.IsActive());
-#endif
 }
 
 void Pcsx2App::CloseGsPanel()

@@ -33,7 +33,7 @@
 #include "DebugTools/Debug.h"
 #include "R3000A.h"
 #include "SPU2/spu2.h"
-
+#include <SDL.h>
 // renderswitch - tells GSdx to go into dx9 sw if "renderswitch" is set.
 bool renderswitch = false;
 uint renderswitch_delay = 0;
@@ -41,6 +41,8 @@ uint renderswitch_delay = 0;
 extern bool switchAR;
 
 static int g_Pcsx2Recording = 0; // true 1 if recording video and sound
+extern SDL_Window* gWindow;
+extern bool requestShutdown;
 
 
 KeyAcceleratorCode::KeyAcceleratorCode(const wxKeyEvent& evt)
@@ -506,8 +508,14 @@ namespace Implementations
 
 	void FullscreenToggle()
 	{
-		if (GSFrame* gsframe = wxGetApp().GetGsFramePtr())
-			gsframe->ShowFullScreen(!gsframe->IsFullScreen());
+		if (SDL_GetWindowFlags(gWindow) & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN))
+		{
+			SDL_SetWindowFullscreen(gWindow, 0);
+		}
+		else
+		{
+			SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		}
 	}
 #ifndef DISABLE_RECORDING
 	void FrameAdvance()
@@ -1011,23 +1019,23 @@ void Pcsx2App::InitDefaultGlobalAccelerators()
 	// - One reason is because this is used to initialize shortcuts in the MainFrame's UI (see - MainFrame::AppendShortcutToMenuOption)
 	//   this is before the GS Window has been initialized.
 
-	GlobalAccels->Map(AAC(WXK_F1), "States_FreezeCurrentSlot");
-	GlobalAccels->Map(AAC(WXK_F3), "States_DefrostCurrentSlot");
-	GlobalAccels->Map(AAC(WXK_F2), "States_CycleSlotForward");
-	GlobalAccels->Map(AAC(WXK_F2).Shift(), "States_CycleSlotBackward");
+	GlobalAccels->Map( AAC( WXK_F5 ),			"States_FreezeCurrentSlot" );
+	GlobalAccels->Map( AAC( WXK_F7 ),			"States_DefrostCurrentSlot" );
+	GlobalAccels->Map( AAC( WXK_F2 ),			"States_CycleSlotForward" );
+	GlobalAccels->Map( AAC( WXK_F2 ).Shift(),	"States_CycleSlotBackward" );
 
 	GlobalAccels->Map(AAC(WXK_F4), "Framelimiter_MasterToggle");
 	GlobalAccels->Map(AAC(WXK_F4).Shift(), "Frameskip_Toggle");
 
-	/*GlobalAccels->Map( AAC( WXK_ESCAPE ),		"Sys_Suspend");
-	GlobalAccels->Map( AAC( WXK_F8 ),			"Sys_TakeSnapshot");
+	GlobalAccels->Map( AAC( WXK_ESCAPE ),		"Sys_SuspendResume");
+	/*GlobalAccels->Map( AAC( WXK_F8 ),			"Sys_TakeSnapshot");
 	GlobalAccels->Map( AAC( WXK_F8 ).Shift(),	"Sys_TakeSnapshot");
 	GlobalAccels->Map( AAC( WXK_F8 ).Shift().Cmd(),"Sys_TakeSnapshot");
 	GlobalAccels->Map( AAC( WXK_F9 ),			"Sys_RenderswitchToggle");
 
 	GlobalAccels->Map( AAC( WXK_F10 ),			"Sys_LoggingToggle");
 	GlobalAccels->Map( AAC( WXK_F11 ),			"Sys_FreezeGS");
-	GlobalAccels->Map( AAC( WXK_F12 ),			"Sys_RecordingToggle");
-
-	GlobalAccels->Map( AAC( WXK_RETURN ).Alt(),	"FullscreenToggle" );*/
+	GlobalAccels->Map( AAC( WXK_F12 ),			"Sys_RecordingToggle");*/
+	const KeyAcceleratorCode FULLSCREEN_TOGGLE_ACCELERATOR_GSPANEL=(wxKeyCode)'f';
+	GlobalAccels->Map( FULLSCREEN_TOGGLE_ACCELERATOR_GSPANEL,	"FullscreenToggle" );
 }
