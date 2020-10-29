@@ -656,7 +656,6 @@ namespace Implementations
 #endif
 } // namespace Implementations
 
-
 void shutdownExternal()
 {
     if (CoreThread.HasPendingStateChangeRequest())

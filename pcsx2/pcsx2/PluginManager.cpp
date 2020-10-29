@@ -936,8 +936,6 @@ void SysCorePlugins::Unload()
 	if( NeedsShutdown() )
 		Console.Warning( "(SysCorePlugins) Warning: Unloading plugins prior to shutdown!" );
 
-	//Shutdown();
-
 	if( !NeedsUnload() ) return;
 
 	DbgCon.WriteLn( Color_StrongBlue, "Unloading plugins..." );
@@ -1128,7 +1126,7 @@ void SysCorePlugins::Close( PluginsEnum_t pid )
 	ScopedLock lock( m_mtx_PluginStatus );
 	if( m_info[pid] ) m_info[pid]->IsOpened = false;
 }
-
+void wxRequestExit(void);
 void SysCorePlugins::Close()
 {
 	if( !NeedsClose() ) return;	// Spam stopper; returns before writing any logs. >_<
@@ -1148,6 +1146,9 @@ void SysCorePlugins::Close()
 		Close( tbl_PluginInfo[i].id );
 	
 	Console.WriteLn( Color_StrongBlue, "Plugins closed successfully." );
+	#warning "jc: modified shutdown"
+	Shutdown();
+	wxRequestExit();
 }
 
 void SysCorePlugins::Init( PluginsEnum_t pid )

@@ -53,9 +53,6 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-typedef unsigned int uint32;
-//int  GSopen2(void** dsp, uint32 flags);
-
 // Safe to remove these lines when this is handled properly.
 #ifdef __WXMAC__
 // Great joy....
@@ -115,7 +112,6 @@ int pcsx2_main(int argc_local, char* argv_local[])
     wxEntryStart(argc_local,argv_local);
     wxTheApp->CallOnInit();
     wxTheApp->OnRun();
-    //ClosePlugins();
     wxTheApp->OnExit();
     delete wxTheApp;
 
@@ -990,7 +986,6 @@ SysMainMemory& Pcsx2App::GetVmReserve()
 	if (!m_VmReserve) m_VmReserve = std::unique_ptr<SysMainMemory>(new SysMainMemory());
 	return *m_VmReserve;
 }
-
 
 extern Display* XDisplay;	
 extern Window Xwindow;
