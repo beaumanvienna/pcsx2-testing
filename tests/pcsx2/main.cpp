@@ -620,7 +620,11 @@ int main(int argc, char* argv[])
             XDisplay     = sdlWindowInfo.info.x11.display;
             
             pcsx2_main(pcsx2_argc,pcsx2_argv);
-            printf("jc exit test\n");    
+            printf("jc *******************************\n");
+            pcsx2_main(pcsx2_argc,pcsx2_argv);
+            printf("jc *******************************\n");
+            pcsx2_main(pcsx2_argc,pcsx2_argv);
+            printf("jc *******************************\n");
         }
     }
 

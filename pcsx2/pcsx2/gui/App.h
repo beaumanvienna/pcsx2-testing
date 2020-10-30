@@ -571,6 +571,7 @@ public:
 	void LogicalVsync();
 	
 	SysMainMemory& GetVmReserve();
+    void ReleaseVmReserve();
 	
 	GSFrame&			GetGsFrame() const;
 	MainEmuFrame&		GetMainFrame() const;

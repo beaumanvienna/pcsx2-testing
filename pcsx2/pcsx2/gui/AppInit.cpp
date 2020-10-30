@@ -647,6 +647,8 @@ void Pcsx2App::CleanupRestartable()
 // to be friendly to the OnExit scenario (no message pump).
 void Pcsx2App::CleanupOnExit()
 {
+    ReleaseVmReserve();
+    if (m_CpuProviders) m_CpuProviders.reset();
 	AffinityAssert_AllowFrom_MainUI();
 
 	try

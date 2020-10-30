@@ -90,7 +90,7 @@ extern bool requestShutdown;
 int pcsx2_main(int argc_local, char* argv_local[])
 {
     
-/*    initEE();
+    initEE();
     initIOP();
     iCoreInit();
     initCOP0();
@@ -107,7 +107,7 @@ int pcsx2_main(int argc_local, char* argv_local[])
     initR5900Op();
     initVif0_Dma();
     initVif1_Dma();
-    initNewVif_unpack();*/
+    initNewVif_unpack();
     
     wxEntryStart(argc_local,argv_local);
     wxTheApp->CallOnInit();
@@ -987,6 +987,10 @@ SysMainMemory& Pcsx2App::GetVmReserve()
 	return *m_VmReserve;
 }
 
+void Pcsx2App::ReleaseVmReserve()
+{
+    if (m_VmReserve) m_VmReserve.reset();
+}
 extern Display* XDisplay;	
 extern Window Xwindow;
 void Pcsx2App::OpenGsPanel()

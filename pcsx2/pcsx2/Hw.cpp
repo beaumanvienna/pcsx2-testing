@@ -30,6 +30,13 @@ int rdram_sdevid = 0;
 
 static bool hwInitialized = false;
 
+void initHW()
+{
+    rdram_sdevid = 0;
+    hwInitialized = false;
+
+}
+
 void hwInit()
 {
 	// [TODO] / FIXME:  PCSX2 no longer works on an Init system.  It assumes that the

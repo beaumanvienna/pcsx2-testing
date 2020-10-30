@@ -22,6 +22,10 @@
 #include "newVif.h"
 
 u32 g_vif1Cycles = 0;
+void initVif1_Dma()
+{
+    g_vif1Cycles = 0;
+}
 
 __fi void vif1FLUSH()
 {
