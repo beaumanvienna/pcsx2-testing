@@ -434,14 +434,6 @@ endif()
 # Use some default machine flags
 string(STRIP "${CMAKE_CXX_FLAGS} ${DEFAULT_CPP_FLAG}" CMAKE_CXX_FLAGS)
 
-#-------------------------------------------------------------------------------
-# Too much user/packager use experimental flags as release flags
-#-------------------------------------------------------------------------------
-if(CMAKE_BUILD_TYPE MATCHES "Release" OR PACKAGE_MODE)
-    if (GTK3_API)
-        message(WARNING "GTK3 is highly experimental besides it requires a wxWidget built with __WXGTK3__ support !!!")
-    endif()
-endif()
 
 
 #-------------------------------------------------------------------------------

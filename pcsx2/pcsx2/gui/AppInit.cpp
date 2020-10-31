@@ -469,7 +469,6 @@ bool Pcsx2App::OnInit()
 	g_Conf = std::make_unique<AppConfig>();
     wxInitAllImageHandlers();
 
-	Console.WriteLn("Applying operating system default language...");
 	{
 		// The PCSX2 log system hasn't been set up yet, so error messages might
 		// pop up that could cause some alarm amongst users. Let's avoid that.
@@ -477,9 +476,7 @@ bool Pcsx2App::OnInit()
 		i18n_SetLanguage(wxLANGUAGE_DEFAULT);
 	}
 
-	Console.WriteLn("Command line parsing...");
 	if( !_parent::OnInit() ) return false;
-	Console.WriteLn("Command line parsed!");
 
 	i18n_SetLanguagePath();
 
