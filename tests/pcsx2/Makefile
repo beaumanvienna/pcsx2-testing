@@ -59,8 +59,8 @@ LINKER_OBJECTS += -lX11-xcb
 LINKER_OBJECTS += -lxcb
 LINKER_OBJECTS += -lEGL
 LINKER_OBJECTS += -lSoundTouch
-LINKER_OBJECTS += /usr/lib/libportaudio.so
-LINKER_OBJECTS += /usr/lib/libasound.so
+LINKER_OBJECTS += -lportaudio
+LINKER_OBJECTS += -lasound
 
 all: PCSX2
 
