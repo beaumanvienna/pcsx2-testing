@@ -289,7 +289,8 @@ s32 CALLBACK DEV9freeze(int mode, freezeData *data);
 void CALLBACK DEV9configure();
 void CALLBACK DEV9about();
 s32 CALLBACK DEV9test();
-
+void CALLBACK DEV9async(u32 cycles);
+void CALLBACK DEV9keyEvent(keyEvent* ev);
 #endif
 
 /* USB plugin API */
