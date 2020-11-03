@@ -328,7 +328,7 @@ s32 CALLBACK USBfreeze(int mode, freezeData *data);
 void CALLBACK USBconfigure();
 void CALLBACK USBabout();
 s32 CALLBACK USBtest();
-
+void CALLBACK USBkeyEvent(keyEvent* ev);
 #endif
 
 // might be useful for emulators
